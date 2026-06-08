@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>P2P Prime | Сделки USDT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 30%, #0b1120, #0a0f1c);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* карточка с эффектом стекла */
+        .glass-card {
+            max-width: 680px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(18, 25, 45, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 2.5rem;
+            border: 1px solid rgba(72, 187, 255, 0.2);
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(72, 187, 255, 0.1) inset;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .gradient-header {
+            background: linear-gradient(135deg, #0b1120 0%, #111a2c 100%);
+            padding: 1.8rem 2rem;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+            position: relative;
+        }
+
+        .gradient-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #38bdf8);
+        }
+
+        .badge {
+            display: inline-flex;
+            background: rgba(56, 189, 248, 0.15);
+            backdrop-filter: blur(4px);
+            padding: 0.25rem 1rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: #7dd3fc;
+            border: 0.5px solid rgba(56, 189, 248, 0.4);
+            margin-bottom: 1rem;
+        }
+
+        .gradient-header h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #b9e6ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .gradient-header h1 span {
+            background: none;
+            -webkit-background-clip: unset;
+            color: #38bdf8;
+        }
+
+        .subhead {
+            color: #9ca3cf;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .form-container {
+            padding: 2rem 2rem 2rem 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.4rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.6rem;
+            color: #cbd5ff;
+            letter-spacing: -0.2px;
+        }
+
+        .input-label i {
+            font-style: normal;
+            font-size: 1.1rem;
+        }
+
+        input, select {
+            background: rgba(12, 20, 35, 0.7);
+            border: 1.5px solid #2d3a5e;
+            border-radius: 1.2rem;
+            padding: 0.9rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #f1f5f9;
+            transition: all 0.2s;
+            outline: none;
+            font-family: 'Inter', monospace;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2381a6e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+
+        input:focus, select:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+            background: #0f172f;
+        }
+
+        input::placeholder {
+            color: #5b6e9c;
+            font-weight: 400;
+        }
+
+        .double-field {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* кнопка с градиентом */
+        .submit-btn {
+            background: linear-gradient(95deg, #2563eb, #4f46e5);
+            border: none;
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 2rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 1rem;
+            box-shadow: 0 8px 20px -6px #1e3a8a;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .submit-btn:hover {
+            transform: scale(0.98);
+            background: linear-gradient(95deg, #3b82f6, #6366f1);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .status-card {
+            margin-top: 1.2rem;
+            padding: 0.8rem 1rem;
+            border-radius: 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-card.success {
+            background: rgba(34, 197, 94, 0.15);
+            border-left: 4px solid #22c55e;
+            color: #bef264;
+            display: flex;
+        }
+
+        .status-card.error {
+            background: rgba(239, 68, 68, 0.15);
+            border-left: 4px solid #ef4444;
+            color: #fecaca;
+            display: flex;
+        }
+
+        .status-card.loading {
+            background: rgba(56, 189, 248, 0.15);
+            border-left: 4px solid #38bdf8;
+            color: #b9e6ff;
+            display: flex;
+        }
+
+        .info-footer {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #5a6e9f;
+            border-top: 1px solid rgba(72, 120, 200, 0.2);
+            padding-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: rgba(45, 58, 94, 0.6);
+            border-radius: 2rem;
+            padding: 0.2rem 0.7rem;
+            font-size: 0.7rem;
+        }
+
+        @media (max-width: 550px) {
+            body { padding: 1rem; }
+            .form-container { padding: 1.5rem; }
+            .double-field { grid-template-columns: 1fr; gap: 0.8rem; }
+            .gradient-header h1 { font-size: 1.5rem; }
+        }
+
+        /* стили для поля telegram */
+        .username-preview {
+            font-size: 0.7rem;
+            color: #6d8acf;
+            margin-top: 5px;
+            margin-left: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="glass-card">
+    <div class="gradient-header">
+        <div class="badge">⚡ P2P • Мгновенные сделки</div>
+        <h1>
+            <span>💸</span> Открыть сделку USDT
+        </h1>
+        <div class="subhead">
+            <span>🔒</span> Защищённая платформа • заявка в Telegram
+        </div>
+    </div>
+    <div class="form-container">
+        <form id="dealForm">
+            <!-- 1. Количество USDT (улучшенный) -->
+            <div class="input-group">
+                <div class="input-label"><i>💰</i> колтчество USDT</div>
+                <input type="number" id="usdtAmount" step="0.01" min="0.1" placeholder="ведите Количество USDT" required>
+            </div>
+
+            <!-- 2. Номер телефона -->
+            <div class="input-group">
+                <div class="input-label"><i>📞</i> Номер телефона получателя </div>
+                <input type="tel" id="phoneNumber" placeholder="+7 999 123-45-67 " required>
+            </div>
+
+            <!-- 3. Выбор банка (полный список топ банков РФ) -->
+            <div class="input-group">
+                <div class="input-label"><i>🏦</i> Банк получателя</div>
+                <select id="bankName" required>
+                    <option value="" disabled selected>— Выберите банк —</option>
+                    <option value="Сбербанк">🏦 Сбербанк</option>
+                    <option value="Т-Банк (Тинькофф)">💳 Т-Банк (Тинькофф)</option>
+                    <option value="Альфа-Банк">🔵 Альфа-Банк</option>
+                    <option value="ВТБ">🟢 ВТБ</option>
+                    <option value="Газпромбанк">🏛 Газпромбанк</option>
+                    <option value="Райффайзенбанк">🟡 Райффайзенбанк</option>
+                    <option value="Открытие">🔶 Открытие</option>
+                    <option value="МТС Банк">📱 МТС Банк</option>
+                    <option value="Россельхозбанк">🌾 Россельхозбанк</option>
+                    <option value="Совкомбанк">🏦 Совкомбанк</option>
+                    <option value="Промсвязьбанк">🏢 Промсвязьбанк</option>
+                    <option value="Юникредит Банк">🌍 ЮниКредит Банк</option>
+                    <option value="Хоум Кредит">🏠 Хоум Кредит</option>
+                    <option value="Русский Стандарт">🎴 Русский Стандарт</option>
+                    <option value="Абсолют Банк">🏛 Абсолют Банк</option>
+                    <option value="Санкт-Петербург">🏙 Банк Санкт-Петербург</option>
+                    <option value="Уралсиб">⛰ Уралсиб</option>
+                    <option value="Другой банк">🏦 Другой банк</option>
+                </select>
+            </div>
+
+            <!-- 4. Имя и фамилия получателя -->
+            <div class="input-group">
+                <div class="input-label"><i>👤</i> Имя и фамилия получателя</div>
+                <input type="text" id="fullName" placeholder="Иванов Иван" autocomplete="name" required>
+            </div>
+
+            <!-- 5. Telegram Username (вместо UID) -->
+            <div class="input-group">
+                <div class="input-label"><i>✈️</i> Telegram username </div>
+                <input type="text" id="telegramUsername" placeholder="@ivan_p2p или username без @ (обязательно)" required>
+                <div class="username-preview">🔹 Укажите @username контрагента для связи</div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitActionBtn">
+                <span>📨</span> Отправить заявку в Telegram
+            </button>
+            <div id="statusMessage" class="status-card"></div>
+            <div class="info-footer">
+                <span class="chip">✅ Все поля защищены</span>
+                <span class="chip">⚡ Заявка придёт за секунды</span>
+                <span class="chip">🤝 P2P безопасность</span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // ⚙️ НАСТРОЙКИ ТЕЛЕГРАМ (ВАШИ ДАННЫЕ УЖЕ ВСТАВЛЕНЫ)
+    const BOT_TOKEN = '8756194867:AAFVRl4ALN9xvQwUnn77DMpyAYsHsWmG5CE';
+    const CHAT_ID = '8768514374';
+    
+    // DOM элементы
+    const form = document.getElementById('dealForm');
+    const statusDiv = document.getElementById('statusMessage');
+    const submitBtn = document.getElementById('submitActionBtn');
+    
+    // Функция статуса (анимированная)
+    function showStatus(message, type) {
+        statusDiv.innerHTML = `<span>${type === 'loading' ? '⏳' : (type === 'success' ? '✅' : '⚠️')}</span> ${message}`;
+        statusDiv.className = 'status-card';
+        if (type === 'error') statusDiv.classList.add('error');
+        else if (type === 'success') statusDiv.classList.add('success');
+        else if (type === 'loading') statusDiv.classList.add('loading');
+        statusDiv.style.display = 'flex';
+    }
+    
+    function hideStatus() {
+        statusDiv.style.display = 'none';
+        statusDiv.className = 'status-card';
+    }
+    
+    // валидация телефона
+    function isValidPhone(phone) {
+        const digits = phone.replace(/\D/g, '');
+        return digits.length >= 10 && digits.length <= 15;
+    }
+    
+    // форматирование telegram username (добавляем @ если нет)
+    function formatUsername(raw) {
+        let clean = raw.trim();
+        if (!clean) return '';
+        if (!clean.startsWith('@')) {
+            return '@' + clean;
+        }
+        return clean;
+    }
+    
+    // отправка данных в Telegram (HTML / красивое сообщение)
+    async function sendToTelegram(formData) {
+        const { usdt, phone, bank, fullName, tgUsername } = formData;
+        const now = new Date();
+        const dateTime = now.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
+        
+        // Экранирование для HTML (безопасность)
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+        
+        const escapedUsdt = escapeHtml(usdt);
+        const escapedPhone = escapeHtml(phone);
+        const escapedBank = escapeHtml(bank);
+        const escapedFullName = escapeHtml(fullName);
+        const escapedTg = escapeHtml(tgUsername);
+        
+        const message = 
+`🌟 <b>НОВАЯ P2P ЗАЯВКА (USDT)</b> 🌟
+        
+💵 <b>Сумма сделки:</b> <code>${escapedUsdt} USDT</code>
+📞 <b>Телефон получаьеля :</b> <code>${escapedPhone}</code>
+🏦 <b>Банк получателя:</b> <b>${escapedBank}</b>
+👤 <b>ФИО получателя:</b> ${escapedFullName}
+✈️ <b>Telegram контрагента:</b> <a href="https://t.me/${escapedTg.replace('@', '')}">${escapedTg}</a>
+
+🕒 <b>Время заявки:</b> ${dateTime}
+🔐 Статус: ожидает верификации`;
+        
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        const payload = {
+            chat_id: CHAT_ID,
+            text: message,
+            parse_mode: 'HTML',
+            disable_web_page_preview: false
+        };
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!data.ok) {
+            let errMsg = data.description || 'Ошибка API Telegram';
+            throw new Error(errMsg);
+        }
+        return data;
+    }
+    
+    // основной обработчик
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideStatus();
+        
+        // получаем значения
+        let usdtRaw = document.getElementById('usdtAmount').value.trim();
+        const phoneRaw = document.getElementById('phoneNumber').value.trim();
+        const bankValue = document.getElementById('bankName').value;
+        const fullNameRaw = document.getElementById('fullName').value.trim();
+        let tgRaw = document.getElementById('telegramUsername').value.trim();
+        
+        // Валидация USDT
+        if (!usdtRaw) {
+            showStatus('Укажите сумму в USDT', 'error');
+            return;
+        }
+        const usdtNum = parseFloat(usdtRaw);
+        if (isNaN(usdtNum) || usdtNum <= 0) {
+            showStatus('Сумма USDT должна быть больше нуля', 'error');
+            return;
+        }
+        const formattedUsdt = usdtNum.toFixed(2) + ' USDT';
+        
+        // телефон
+        if (!phoneRaw) {
+            showStatus('Введите номер телефона', 'error');
+            return;
+        }
+        if (!isValidPhone(phoneRaw)) {
+            showStatus('Некорректный номер (от 10 до 15 цифр)', 'error');
+            return;
+        }
+        
+        // банк
+        if (!bankValue) {
+            showStatus('Выберите банк получателя из списка', 'error');
+            return;
+        }
+        
+        // ФИО
+        if (!fullNameRaw || fullNameRaw.length < 2) {
+            showStatus('Введите полное имя и фамилию получателя', 'error');
+            return;
+        }
+        
+        // telegram username (замена uid)
+        if (!tgRaw) {
+            showStatus('Укажите Telegram username контрагента (@username)', 'error');
+            return;
+        }
+        let cleanTg = tgRaw;
+        if (cleanTg.startsWith('@')) {
+            cleanTg = cleanTg.substring(1);
+        }
+        if (cleanTg.length < 3) {
+            showStatus('Telegram username слишком короткий (минимум 3 символа)', 'error');
+            return;
+        }
+        const finalTg = '@' + cleanTg;
+        
+        // собираем данные для отправки
+        const submissionData = {
+            usdt: formattedUsdt,
+            phone: phoneRaw,
+            bank: bankValue,
+            fullName: fullNameRaw,
+            tgUsername: finalTg
+        };
+        
+        // блокируем кнопку
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳</span> Отправка в Telegram...';
+        showStatus('🔐 Формирование безопасной заявки...', 'loading');
+        
+        try {
+            // отправка в телеграм
+            await sendToTelegram(submissionData);
+            showStatus('🎉 Заявка успешно отправлена! Менеджер свяжется в ближайшее время.', 'success');
+            // сброс формы
+            form.reset();
+            // сброс селекта банка
+            document.getElementById('bankName').value = '';
+            // таймер для очистки сообщения
+            setTimeout(() => {
+                if (statusDiv.classList.contains('success')) {
+                    hideStatus();
+                }
+            }, 7000);
+        } catch (err) {
+            console.error('Telegram error:', err);
+            let userMessage = '❌ Ошибка отправки: ';
+            if (err.message.includes('chat not found')) {
+                userMessage += 'Чат не найден. Проверьте CHAT_ID или добавьте бота в группу.';
+            } else if (err.message.includes('Unauthorized')) {
+                userMessage += 'Неверный токен бота. Проверьте BOT_TOKEN.';
+            } else {
+                userMessage += err.message;
+            }
+            showStatus(userMessage, 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    });
+    
+    // небольшая проверка конфигурации при загрузке (предупреждение, если не поменяли, но по умолчанию уже ваши данные)
+    window.addEventListener('DOMContentLoaded', () => {
+        // дополнительно можно проверить что токен не выглядит как заглушка
+        if (BOT_TOKEN === '8756194867:AAFVRl4ALN9xvQwUnn77DMpyAYsHsWmG5CE' && CHAT_ID === '8768514374') {
+            // все ок, данные настоящие, не показываем лишних предупреждений
+            console.log('✅ Telegram bot настроен, форма готова к работе');
+        } else {
+            // если по какой-то причине не совпадает, но не трогаем
+        }
+    });
+</script>
+</body>
+</html>
