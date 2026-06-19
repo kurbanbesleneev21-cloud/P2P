@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2P.Workspace — Панель Управления Учениками</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #0c0f19; color: #e2e8f0; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #1e293b; padding-bottom: 20px; }
+    h1 { color: #f7d875; font-size: 1.8rem; }
+    
+    .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+    @media(max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: #141927; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; }
+    .card h2 { font-size: 1.2rem; margin-bottom: 15px; color: #fff; display: flex; align-items: center; gap: 8px; }
+    
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; }
+    input { width: 100%; padding: 12px; background: #0f131e; border: 1px solid #1e293b; border-radius: 8px; color: #fff; outline: none; }
+    input:focus { border-color: #f7d875; }
+    
+    .btn { background: #f7d875; color: #0c0f19; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s; }
+    .btn:hover { background: #fbd351; }
+    .btn-danger { background: #ef4444; color: #fff; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: auto; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-warning { background: #f59e0b; color: #fff; padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: auto; }
+
+    .user-row { background: #0f131e; border: 1px solid #1e293b; border-radius: 10px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .user-info h4 { color: #fff; font-size: 1rem; }
+    .user-info p { font-size: 0.75rem; color: #94a3b8; margin-top: 2px; }
+    .status-badge { inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .status-online { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    
+    .actions-cell { display: flex; gap: 8px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-user-shield"></i> P2P.Workspace HQ</h1>
+      <div>Панель Управления Ресурсом</div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h2><i class="fas fa-user-plus"></i> Выдать Доступ</h2>
+        <div class="form-group">
+          <label>Логин студента (латиница)</label>
+          <input type="text" id="new-username" placeholder="ivan_p2p">
+        </div>
+        <div class="form-group">
+          <label>Пароль доступа</label>
+          <input type="text" id="new-password" placeholder="Придумайте пароль">
+        </div>
+        <button class="btn" onclick="createUser()">Создать аккаунт</button>
+      </div>
+
+      <div class="card">
+        <h2><i class="fas fa-users"></i> Активные учетные записи и Устройства</h2>
+        <div id="users-list">
+          <p style="color:#94a3b8;">Загрузка данных из облака...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // НАСТРОЙКА FIREBASE (Должна полностью совпадать с клиентским приложением)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsYourKeyHere",
+      authDomain: "p2p-workspace.firebaseapp.com",
+      databaseURL: "https://p2p-workspace-default-rtdb.firebaseio.com",
+      projectId: "p2p-workspace",
+      storageBucket: "p2p-workspace.appspot.com",
+      messagingSenderId: "12345678",
+      appId: "1:1234:web:abcd"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Чтение данных пользователей и их привязанных HWID в реальном времени
+    db.ref('system_access').on('value', (snapshot) => {
+      const users = snapshot.val() || {};
+      
+      db.ref('active_sessions').on('value', (sessionSnapshot) => {
+        const sessions = sessionSnapshot.val() || {};
+        renderUsersTable(users, sessions);
+      });
+    });
+
+    function renderUsersTable(users, sessions) {
+      const wrapper = document.getElementById('users-list');
+      wrapper.innerHTML = '';
+
+      const userKeys = Object.keys(users);
+      if(userKeys.length === 0) {
+        wrapper.innerHTML = '<p style="color:#94a3b8;">Нет созданных аккаунтов.</p>';
+        return;
+      }
+
+      userKeys.forEach(username => {
+        const password = users[username];
+        const sessionData = sessions[username] || null;
+        const currentHWID = sessionData ? sessionData.device_uid : "Не привязано (еще не входил)";
+        const progress = sessionData ? (sessionData.current_module || "Начало") : "Нет данных";
+
+        const row = document.createElement('div');
+        row.className = 'user-row';
+        row.innerHTML = `
+          <div class="user-info">
+            <h4>${username} <span style="font-size:0.8rem; color:#f7d875; font-weight:normal;">(Pass: ${password})</span></h4>
+            <p><strong>Девайс (HWID):</strong> <span style="color:#cbd5e1;">${currentHWID}</span></p>
+            <p><strong>Прогресс:</strong> <span style="color:#cbd5e1;">${progress}</span></p>
+          </div>
+          <div class="actions-cell">
+            ${sessionData ? `<button class="btn-warning" onclick="resetDevice('${username}')" title="Позволит зайти с другого телефона"><i class="fas fa-mobile-alt"></i> Сбросить HWID</button>` : ''}
+            <button class="btn-danger" onclick="deleteUser('${username}')"><i class="fas fa-trash-alt"></i> Удалить</button>
+          </div>
+        `;
+        wrapper.appendChild(row);
+      });
+    }
+
+    // Создание пользователя в облаке
+    function createUser() {
+      const u = document.getElementById('new-username').value.trim().toLowerCase();
+      const p = document.getElementById('new-password').value.trim();
+
+      if(!u || !p) { alert("Заполните оба поля!"); return; }
+
+      db.ref('system_access/' + u).set(p).then(() => {
+        alert(`Пользователь ${u} успешно создан!`);
+        document.getElementById('new-username').value = '';
+        document.getElementById('new-password').value = '';
+      });
+    }
+
+    // Сброс привязанного устройства (ученик сможет зайти с нового девайса)
+    function resetDevice(username) {
+      if(confirm(`Сбросить привязку устройства для ${username}? Старое устройство будет отключено.`)) {
+        db.ref('active_sessions/' + username).remove().then(() => {
+          alert("Привязка устройства очищена.");
+        });
+      }
+    }
+
+    // Полное удаление аккаунта
+    function deleteUser(username) {
+      if(confirm(`Вы уверены, что хотите полностью удалить аккаунт ${username}?`)) {
+        db.ref('system_access/' + username).remove();
+        db.ref('active_sessions/' + username).remove().then(() => {
+          alert("Аккаунт полностью стерт из базы.");
+        });
+      }
+    }
+  </script>
+</body>
+</html>
