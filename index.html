@@ -1,553 +1,508 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>P2P Prime | Сделки USDT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>P2P.Workspace Pro — Анти-Шеринг Система</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-        body {
-            background: radial-gradient(circle at 10% 30%, #0b1120, #0a0f1c);
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            padding: 2rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body { background: #07090e; color: #eaeef2; line-height: 1.5; }
+    
+    .mobile-header {
+      position: sticky; top: 0; background: #0b0d15;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 100;
+    }
+    .logo { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, #f0b34b, #f7d875); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-circle { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        /* карточка с эффектом стекла */
-        .glass-card {
-            max-width: 680px;
-            width: 100%;
-            margin: 0 auto;
-            background: rgba(18, 25, 45, 0.75);
-            backdrop-filter: blur(12px);
-            border-radius: 2.5rem;
-            border: 1px solid rgba(72, 187, 255, 0.2);
-            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(72, 187, 255, 0.1) inset;
-            overflow: hidden;
-            transition: transform 0.2s ease;
-        }
+    .top-progress-container { background: #0b0d15; padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: #8899aa; margin-bottom: 6px; }
+    .progress-bar-bg { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #f0b34b, #f7d875); transition: width 0.3s ease; }
 
-        .gradient-header {
-            background: linear-gradient(135deg, #0b1120 0%, #111a2c 100%);
-            padding: 1.8rem 2rem;
-            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
-            position: relative;
-        }
+    .app-content { padding: 16px; padding-bottom: 100px; max-width: 500px; margin: 0 auto; }
 
-        .gradient-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, #38bdf8, #818cf8, #38bdf8);
-        }
+    .screen { display: none; }
+    .screen.active { display: block; }
 
-        .badge {
-            display: inline-flex;
-            background: rgba(56, 189, 248, 0.15);
-            backdrop-filter: blur(4px);
-            padding: 0.25rem 1rem;
-            border-radius: 40px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            color: #7dd3fc;
-            border: 0.5px solid rgba(56, 189, 248, 0.4);
-            margin-bottom: 1rem;
-        }
+    .card { background: #0b0d15; border: 1px solid rgba(255,255,255,0.06); padding: 24px 16px; border-radius: 24px; width: 100%; }
+    .card h2 { font-size: 1.4rem; margin-bottom: 12px; text-align: center; }
+    
+    .form-group { margin-bottom: 16px; text-align: left; }
+    .form-group label { display: block; font-size: 0.85rem; color: #8899aa; margin-bottom: 6px; padding-left: 4px; }
+    .input-field { width: 100%; padding: 14px 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; color: #fff; font-size: 0.95rem; outline: none; }
+    .input-field:focus { border-color: #f7d875; }
 
-        .gradient-header h1 {
-            font-size: 1.9rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #ffffff, #b9e6ff);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            letter-spacing: -0.3px;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
+    .setup-step-box { background: #111420; border: 1px solid rgba(255,255,255,0.04); border-radius: 20px; padding: 20px 16px; margin-bottom: 20px; }
+    .setup-visual { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; color: #f7d875; font-size: 1.8rem; }
 
-        .gradient-header h1 span {
-            background: none;
-            -webkit-background-clip: unset;
-            color: #38bdf8;
-        }
+    .lesson-badge { display: inline-block; background: rgba(247, 216, 117, 0.08); color: #f7d875; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; border: 1px solid rgba(247, 216, 117, 0.1); }
+    .lesson-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 14px; }
+    .lesson-text { color: #c0cedc; font-size: 0.95rem; margin-bottom: 24px; }
+    .lesson-text p { margin-bottom: 12px; }
+    .lesson-text strong { color: #f7d875; }
 
-        .subhead {
-            color: #9ca3cf;
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
+    .btn-action { width: 100%; background: #f7d875; color: #0b0d15; border: none; padding: 16px; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn-action:disabled { background: #202533; color: #546575; cursor: not-allowed; }
 
-        .form-container {
-            padding: 2rem 2rem 2rem 2rem;
-        }
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .option-btn { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px 16px; border-radius: 14px; color: #b0c0d0; font-size: 0.9rem; text-align: left; cursor: pointer; width: 100%; }
+    .option-btn.correct { background: rgba(76, 175, 80, 0.12) !important; border-color: #4caf50 !important; color: #4caf50 !important; font-weight: 600; }
+    .option-btn.wrong { background: rgba(244, 67, 54, 0.12) !important; border-color: #f44336 !important; color: #f44336 !important; }
+    .feedback-msg { margin-top: 14px; font-size: 0.85rem; font-weight: 500; text-align: center; display: none; }
 
-        .input-group {
-            margin-bottom: 1.4rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 0.6rem;
-            color: #cbd5ff;
-            letter-spacing: -0.2px;
-        }
-
-        .input-label i {
-            font-style: normal;
-            font-size: 1.1rem;
-        }
-
-        input, select {
-            background: rgba(12, 20, 35, 0.7);
-            border: 1.5px solid #2d3a5e;
-            border-radius: 1.2rem;
-            padding: 0.9rem 1rem;
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: #f1f5f9;
-            transition: all 0.2s;
-            outline: none;
-            font-family: 'Inter', monospace;
-        }
-
-        select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2381a6e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-        }
-
-        input:focus, select:focus {
-            border-color: #38bdf8;
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-            background: #0f172f;
-        }
-
-        input::placeholder {
-            color: #5b6e9c;
-            font-weight: 400;
-        }
-
-        .double-field {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        /* кнопка с градиентом */
-        .submit-btn {
-            background: linear-gradient(95deg, #2563eb, #4f46e5);
-            border: none;
-            width: 100%;
-            padding: 1rem;
-            font-size: 1rem;
-            font-weight: 700;
-            border-radius: 2rem;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 1rem;
-            box-shadow: 0 8px 20px -6px #1e3a8a;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .submit-btn:hover {
-            transform: scale(0.98);
-            background: linear-gradient(95deg, #3b82f6, #6366f1);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-        }
-
-        .status-card {
-            margin-top: 1.2rem;
-            padding: 0.8rem 1rem;
-            border-radius: 1.2rem;
-            font-size: 0.85rem;
-            font-weight: 500;
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .status-card.success {
-            background: rgba(34, 197, 94, 0.15);
-            border-left: 4px solid #22c55e;
-            color: #bef264;
-            display: flex;
-        }
-
-        .status-card.error {
-            background: rgba(239, 68, 68, 0.15);
-            border-left: 4px solid #ef4444;
-            color: #fecaca;
-            display: flex;
-        }
-
-        .status-card.loading {
-            background: rgba(56, 189, 248, 0.15);
-            border-left: 4px solid #38bdf8;
-            color: #b9e6ff;
-            display: flex;
-        }
-
-        .info-footer {
-            margin-top: 1.5rem;
-            text-align: center;
-            font-size: 0.7rem;
-            color: #5a6e9f;
-            border-top: 1px solid rgba(72, 120, 200, 0.2);
-            padding-top: 1rem;
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .chip {
-            background: rgba(45, 58, 94, 0.6);
-            border-radius: 2rem;
-            padding: 0.2rem 0.7rem;
-            font-size: 0.7rem;
-        }
-
-        @media (max-width: 550px) {
-            body { padding: 1rem; }
-            .form-container { padding: 1.5rem; }
-            .double-field { grid-template-columns: 1fr; gap: 0.8rem; }
-            .gradient-header h1 { font-size: 1.5rem; }
-        }
-
-        /* стили для поля telegram */
-        .username-preview {
-            font-size: 0.7rem;
-            color: #6d8acf;
-            margin-top: 5px;
-            margin-left: 12px;
-        }
-    </style>
+    .profile-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,7,12,0.95); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .profile-card { background: #111420; border: 1px solid rgba(255,255,255,0.08); width: 100%; max-width: 400px; border-radius: 24px; padding: 24px; position: relative; }
+    .profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
+  </style>
 </head>
 <body>
-<div class="glass-card">
-    <div class="gradient-header">
-        <div class="badge">⚡ P2P • Мгновенные сделки</div>
-        <h1>
-            <span>💸</span> Открыть сделку USDT
-        </h1>
-        <div class="subhead">
-            <span>🔒</span> Защищённая платформа • заявка в Telegram
+
+  <header class="mobile-header">
+    <div class="logo"><i class="fas fa-shield-alt"></i> P2P.Workspace</div>
+    <div class="header-actions" id="header-tools" style="display:none;">
+      <button class="btn-circle" onclick="toggleProfile(true)"><i class="fas fa-user-astronaut"></i></button>
+      <button class="btn-circle" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+  </header>
+
+  <div class="top-progress-container" id="global-progress" style="display:none;">
+    <div class="progress-meta">
+      <span id="lesson-counter-text">Загрузка модулей безопасности...</span>
+      <span id="lesson-percent-text">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="lesson-bar-fill"></div>
+    </div>
+  </div>
+
+  <div class="app-content">
+
+    <div class="screen active" id="scr-login">
+      <div class="card">
+        <div style="text-align:center; margin-bottom:20px;">
+          <i class="fas fa-fingerprint" style="font-size:2.5rem; color:#f7d875; margin-bottom:10px;"></i>
+          <h2>Hardware ID Контроль</h2>
+          <p style="color:#8899aa; font-size:0.85rem;">При входе аккаунт жестко привязывается к текущему устройству.</p>
         </div>
+
+        <div class="form-group">
+          <label>Ваш Учениковский Логин</label>
+          <input type="text" id="log-username" class="input-field" placeholder="Введите логин">
+        </div>
+
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" id="log-password" class="input-field" placeholder="••••••••">
+        </div>
+
+        <button class="btn-action" id="login-submit-btn" onclick="handleLogin()">Авторизовать устройство <i class="fas fa-sign-in-alt"></i></button>
+      </div>
     </div>
-    <div class="form-container">
-        <form id="dealForm">
-            <!-- 1. Количество USDT (улучшенный) -->
-            <div class="input-group">
-                <div class="input-label"><i>💰</i> колтчество USDT</div>
-                <input type="number" id="usdtAmount" step="0.01" min="0.1" placeholder="ведите Количество USDT" required>
-            </div>
 
-            <!-- 2. Номер телефона -->
-            <div class="input-group">
-                <div class="input-label"><i>📞</i> Номер телефона получателя </div>
-                <input type="tel" id="phoneNumber" placeholder="+7 999 123-45-67 " required>
-            </div>
-
-            <!-- 3. Выбор банка (полный список топ банков РФ) -->
-            <div class="input-group">
-                <div class="input-label"><i>🏦</i> Банк получателя</div>
-                <select id="bankName" required>
-                    <option value="" disabled selected>— Выберите банк —</option>
-                    <option value="Сбербанк">🏦 Сбербанк</option>
-                    <option value="Т-Банк (Тинькофф)">💳 Т-Банк (Тинькофф)</option>
-                    <option value="Альфа-Банк">🔵 Альфа-Банк</option>
-                    <option value="ВТБ">🟢 ВТБ</option>
-                    <option value="Газпромбанк">🏛 Газпромбанк</option>
-                    <option value="Райффайзенбанк">🟡 Райффайзенбанк</option>
-                    <option value="Открытие">🔶 Открытие</option>
-                    <option value="МТС Банк">📱 МТС Банк</option>
-                    <option value="Россельхозбанк">🌾 Россельхозбанк</option>
-                    <option value="Совкомбанк">🏦 Совкомбанк</option>
-                    <option value="Промсвязьбанк">🏢 Промсвязьбанк</option>
-                    <option value="Юникредит Банк">🌍 ЮниКредит Банк</option>
-                    <option value="Хоум Кредит">🏠 Хоум Кредит</option>
-                    <option value="Русский Стандарт">🎴 Русский Стандарт</option>
-                    <option value="Абсолют Банк">🏛 Абсолют Банк</option>
-                    <option value="Санкт-Петербург">🏙 Банк Санкт-Петербург</option>
-                    <option value="Уралсиб">⛰ Уралсиб</option>
-                    <option value="Другой банк">🏦 Другой банк</option>
-                </select>
-            </div>
-
-            <!-- 4. Имя и фамилия получателя -->
-            <div class="input-group">
-                <div class="input-label"><i>👤</i> Имя и фамилия получателя</div>
-                <input type="text" id="fullName" placeholder="Иванов Иван" autocomplete="name" required>
-            </div>
-
-            <!-- 5. Telegram Username (вместо UID) -->
-            <div class="input-group">
-                <div class="input-label"><i>✈️</i> Telegram username </div>
-                <input type="text" id="telegramUsername" placeholder="@ivan_p2p или username без @ (обязательно)" required>
-                <div class="username-preview">🔹 Укажите @username контрагента для связи</div>
-            </div>
-
-            <button type="submit" class="submit-btn" id="submitActionBtn">
-                <span>📨</span> Отправить заявку в Telegram
-            </button>
-            <div id="statusMessage" class="status-card"></div>
-            <div class="info-footer">
-                <span class="chip">✅ Все поля защищены</span>
-                <span class="chip">⚡ Заявка придёт за секунды</span>
-                <span class="chip">🤝 P2P безопасность</span>
-            </div>
-        </form>
+    <div class="screen" id="scr-choose-exchange">
+      <h3 style="font-size:1.2rem; text-align:center; margin-bottom:16px;">Где вы будете разворачивать рабочий профиль?</h3>
+      <div class="setup-step-box" style="cursor:pointer;" onclick="selectExchange('HTX')">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="background:#1c61f3; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800;">H</div>
+          <div>
+            <h4 style="color:#fff;">Криптобиржа HTX</h4>
+            <p style="font-size:0.75rem; color:#8899aa;">Оптимальный выбор для работы со всеми банками СНГ.</p>
+          </div>
+        </div>
+      </div>
+      <div class="setup-step-box" style="cursor:pointer;" onclick="selectExchange('Bybit')">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="background:#f1a214; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800; color:#000;">B</div>
+          <div>
+            <h4 style="color:#fff;">Криптобиржа Bybit</h4>
+            <p style="font-size:0.75rem; color:#8899aa;">Строгий комплаенс, высокая базовая ликвидность.</p>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
 
-<script>
-    // ⚙️ НАСТРОЙКИ ТЕЛЕГРАМ (ВАШИ ДАННЫЕ УЖЕ ВСТАВЛЕНЫ)
-    const BOT_TOKEN = '8756194867:AAFVRl4ALN9xvQwUnn77DMpyAYsHsWmG5CE';
-    const CHAT_ID = '8768514374';
-    
-    // DOM элементы
-    const form = document.getElementById('dealForm');
-    const statusDiv = document.getElementById('statusMessage');
-    const submitBtn = document.getElementById('submitActionBtn');
-    
-    // Функция статуса (анимированная)
-    function showStatus(message, type) {
-        statusDiv.innerHTML = `<span>${type === 'loading' ? '⏳' : (type === 'success' ? '✅' : '⚠️')}</span> ${message}`;
-        statusDiv.className = 'status-card';
-        if (type === 'error') statusDiv.classList.add('error');
-        else if (type === 'success') statusDiv.classList.add('success');
-        else if (type === 'loading') statusDiv.classList.add('loading');
-        statusDiv.style.display = 'flex';
-    }
-    
-    function hideStatus() {
-        statusDiv.style.display = 'none';
-        statusDiv.className = 'status-card';
-    }
-    
-    // валидация телефона
-    function isValidPhone(phone) {
-        const digits = phone.replace(/\D/g, '');
-        return digits.length >= 10 && digits.length <= 15;
-    }
-    
-    // форматирование telegram username (добавляем @ если нет)
-    function formatUsername(raw) {
-        let clean = raw.trim();
-        if (!clean) return '';
-        if (!clean.startsWith('@')) {
-            return '@' + clean;
-        }
-        return clean;
-    }
-    
-    // отправка данных в Telegram (HTML / красивое сообщение)
-    async function sendToTelegram(formData) {
-        const { usdt, phone, bank, fullName, tgUsername } = formData;
-        const now = new Date();
-        const dateTime = now.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
-        
-        // Экранирование для HTML (безопасность)
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
-            });
-        }
-        
-        const escapedUsdt = escapeHtml(usdt);
-        const escapedPhone = escapeHtml(phone);
-        const escapedBank = escapeHtml(bank);
-        const escapedFullName = escapeHtml(fullName);
-        const escapedTg = escapeHtml(tgUsername);
-        
-        const message = 
-`🌟 <b>НОВАЯ P2P ЗАЯВКА (USDT)</b> 🌟
-        
-💵 <b>Сумма сделки:</b> <code>${escapedUsdt} USDT</code>
-📞 <b>Телефон получаьеля :</b> <code>${escapedPhone}</code>
-🏦 <b>Банк получателя:</b> <b>${escapedBank}</b>
-👤 <b>ФИО получателя:</b> ${escapedFullName}
-✈️ <b>Telegram контрагента:</b> <a href="https://t.me/${escapedTg.replace('@', '')}">${escapedTg}</a>
+    <div class="screen" id="scr-setup-wizard">
+      <div class="lesson-badge">Настройка кошелька</div>
+      <h3 class="lesson-title" id="setup-title">Шаг</h3>
+      <div class="lesson-text" id="setup-desc">Описание</div>
+      <div class="setup-visual" id="setup-icon-box"><i class="fas fa-qrcode"></i></div>
+      <button class="btn-action" onclick="nextSetupStep()">Подтвердить шаг <i class="fas fa-chevron-right"></i></button>
+    </div>
 
-🕒 <b>Время заявки:</b> ${dateTime}
-🔐 Статус: ожидает верификации`;
-        
-        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-        const payload = {
-            chat_id: CHAT_ID,
-            text: message,
-            parse_mode: 'HTML',
-            disable_web_page_preview: false
-        };
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        if (!data.ok) {
-            let errMsg = data.description || 'Ошибка API Telegram';
-            throw new Error(errMsg);
-        }
-        return data;
+    <div class="screen" id="scr-academy">
+      <div class="lesson-badge" id="acad-badge">Модуль</div>
+      <h3 class="lesson-title" id="acad-title">Загрузка...</h3>
+      <div class="lesson-text" id="acad-text">Текст...</div>
+
+      <div class="setup-step-box" id="quiz-block-element" style="display:none;">
+        <div style="font-weight:600; font-size:0.95rem; margin-bottom:10px; color:#f7d875;">
+          <i class="fas fa-question-circle"></i> <span id="acad-question">Вопрос</span>
+        </div>
+        <div class="quiz-options" id="acad-options"></div>
+        <div class="feedback-msg" id="acad-feedback"></div>
+      </div>
+
+      <button class="btn-action" id="acad-next-btn" onclick="handleAcademyNavigation()">Далее</button>
+    </div>
+
+    <div class="screen" id="scr-finish">
+      <div class="card" style="text-align:center;">
+        <i class="fas fa-crown" style="font-size:4rem; color:#4caf50; margin-bottom:16px;"></i>
+        <h2>Курс полностью пройден!</h2>
+        <button class="btn-action" onclick="logout()">Выйти</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="profile-modal" id="prof-modal">
+    <div class="profile-card">
+      <h3 style="color:#f7d875; margin-bottom:16px; text-align:center;">Профиль ученика</h3>
+      <div class="profile-row"><span>UID Логин:</span><strong id="p-name">--</strong></div>
+      <div class="profile-row"><span>Биржа:</span><strong id="p-ex">--</strong></div>
+      <div class="profile-row"><span>Прогресс:</span><strong id="p-prog">--</strong></div>
+      <button class="btn-action" style="margin-top:20px; padding:12px;" onclick="toggleProfile(false)">Закрыть</button>
+    </div>
+  </div>
+
+  <script>
+    // === КОНФИГУРАЦИЯ FIREBASE ===
+    // Замените эти данные на конфиг вашего Firebase проекта, чтобы синхронизация устройств заработала глобально на сервере.
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsYourKeyHere",
+      authDomain: "p2p-workspace.firebaseapp.com",
+      databaseURL: "https://p2p-workspace-default-rtdb.firebaseio.com",
+      projectId: "p2p-workspace",
+      storageBucket: "p2p-workspace.appspot.com",
+      messagingSenderId: "12345678",
+      appId: "1:1234:web:abcd"
+    };
+    
+    // Инициализация (если конфиг дефолтный, система будет эмулировать облако локально)
+    let isFirebaseReady = false;
+    try {
+      if(!firebaseConfig.apiKey.includes("YourKey")) {
+        firebase.initializeApp(firebaseConfig);
+        isFirebaseReady = true;
+      }
+    } catch(e) { console.error("Firebase не сконфигурирован:", e); }
+
+    // === БАЗА ОДОБРЕННЫХ АККАУНТОВ ===
+    const VALID_USERS = {
+      "admin": "pass123",
+      "trader77": "secure77",
+      "student1": "p2pgo",
+      "p2p_user": "trade2026"
+    };
+
+    let currentUser = "";
+    let myDeviceUID = "";
+    let currentSetupIndex = 0;
+    let isPracticeMode = false; 
+    let currentAcademyIndex = 0;
+    let forceReadTheoryMode = false;
+    let userData = { exchange: '' };
+
+    // Генерация отпечатков девайса при загрузке
+    function initDeviceFingerprint() {
+      let token = localStorage.getItem('p2p_device_token');
+      if(!token) {
+        token = 'HWID-' + Math.random().toString(36).substring(2, 15).toUpperCase();
+        localStorage.setItem('p2p_device_token', token);
+      }
+      myDeviceUID = token;
     }
-    
-    // основной обработчик
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        hideStatus();
-        
-        // получаем значения
-        let usdtRaw = document.getElementById('usdtAmount').value.trim();
-        const phoneRaw = document.getElementById('phoneNumber').value.trim();
-        const bankValue = document.getElementById('bankName').value;
-        const fullNameRaw = document.getElementById('fullName').value.trim();
-        let tgRaw = document.getElementById('telegramUsername').value.trim();
-        
-        // Валидация USDT
-        if (!usdtRaw) {
-            showStatus('Укажите сумму в USDT', 'error');
-            return;
-        }
-        const usdtNum = parseFloat(usdtRaw);
-        if (isNaN(usdtNum) || usdtNum <= 0) {
-            showStatus('Сумма USDT должна быть больше нуля', 'error');
-            return;
-        }
-        const formattedUsdt = usdtNum.toFixed(2) + ' USDT';
-        
-        // телефон
-        if (!phoneRaw) {
-            showStatus('Введите номер телефона', 'error');
-            return;
-        }
-        if (!isValidPhone(phoneRaw)) {
-            showStatus('Некорректный номер (от 10 до 15 цифр)', 'error');
-            return;
-        }
-        
-        // банк
-        if (!bankValue) {
-            showStatus('Выберите банк получателя из списка', 'error');
-            return;
-        }
-        
-        // ФИО
-        if (!fullNameRaw || fullNameRaw.length < 2) {
-            showStatus('Введите полное имя и фамилию получателя', 'error');
-            return;
-        }
-        
-        // telegram username (замена uid)
-        if (!tgRaw) {
-            showStatus('Укажите Telegram username контрагента (@username)', 'error');
-            return;
-        }
-        let cleanTg = tgRaw;
-        if (cleanTg.startsWith('@')) {
-            cleanTg = cleanTg.substring(1);
-        }
-        if (cleanTg.length < 3) {
-            showStatus('Telegram username слишком короткий (минимум 3 символа)', 'error');
-            return;
-        }
-        const finalTg = '@' + cleanTg;
-        
-        // собираем данные для отправки
-        const submissionData = {
-            usdt: formattedUsdt,
-            phone: phoneRaw,
-            bank: bankValue,
-            fullName: fullNameRaw,
-            tgUsername: finalTg
-        };
-        
-        // блокируем кнопку
-        const originalBtnText = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>⏳</span> Отправка в Telegram...';
-        showStatus('🔐 Формирование безопасной заявки...', 'loading');
-        
-        try {
-            // отправка в телеграм
-            await sendToTelegram(submissionData);
-            showStatus('🎉 Заявка успешно отправлена! Менеджер свяжется в ближайшее время.', 'success');
-            // сброс формы
-            form.reset();
-            // сброс селекта банка
-            document.getElementById('bankName').value = '';
-            // таймер для очистки сообщения
-            setTimeout(() => {
-                if (statusDiv.classList.contains('success')) {
-                    hideStatus();
-                }
-            }, 7000);
-        } catch (err) {
-            console.error('Telegram error:', err);
-            let userMessage = '❌ Ошибка отправки: ';
-            if (err.message.includes('chat not found')) {
-                userMessage += 'Чат не найден. Проверьте CHAT_ID или добавьте бота в группу.';
-            } else if (err.message.includes('Unauthorized')) {
-                userMessage += 'Неверный токен бота. Проверьте BOT_TOKEN.';
-            } else {
-                userMessage += err.message;
-            }
-            showStatus(userMessage, 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
-        }
-    });
-    
-    // небольшая проверка конфигурации при загрузке (предупреждение, если не поменяли, но по умолчанию уже ваши данные)
-    window.addEventListener('DOMContentLoaded', () => {
-        // дополнительно можно проверить что токен не выглядит как заглушка
-        if (BOT_TOKEN === '8756194867:AAFVRl4ALN9xvQwUnn77DMpyAYsHsWmG5CE' && CHAT_ID === '8768514374') {
-            // все ок, данные настоящие, не показываем лишних предупреждений
-            console.log('✅ Telegram bot настроен, форма готова к работе');
+    initDeviceFingerprint();
+
+    // БЛОК ТЕХНИЧЕСКИХ ШАГОВ
+    const setupSteps = [
+      { title: "1. Пароли безопасности", desc: "<p>Задайте сложный пароль в настройках криптобиржи. Включите Face ID.</p>", icon: "fa-key" },
+      { title: "2. Google Authenticator", desc: "<p>Привяжите 2FA-ключ к Google Authenticator для подтверждения выводов денег.</p>", icon: "fa-shield-alt" },
+      { title: "3. Верификация KYC", desc: "<p>Загрузите документы для прохождения базовой верификации на бирже.</p>", icon: "fa-passport" }
+    ];
+
+    // БОЛЬШАЯ РАНДОМИЗИРОВАННАЯ БАЗА ВОПРОСОВ (60 ШТУК)
+    const academyLessons = [
+      {
+        badge: "База с нуля",
+        title: "1. Вход в P2P-раздел: Куда нажимать?",
+        text: "<p>На главном экране нажмите <strong>«P2P-торговля»</strong>. Без этого вы попадете на спотовый рынок, где рубли с карты не принимают.</p>",
+        question: "Где на бирже находится интерфейс для обмена рублей с карты на крипту?",
+        options: [{text: "Во вкладке 'P2P-торговля'", isCorrect: true}, {text: "На вкладке 'Фьючерсы'", isCorrect: false}, {text: "В стакане спотового рынка пары BTC/USDT", isCorrect: false}],
+        hint: "Раздел P2P — это ваш основной рабочий стол."
+      },
+      {
+        badge: "База с нуля",
+        title: "2. Покупка USDT: Фильтры",
+        text: "<p>Используйте кнопку <strong>«Фильтр»</strong>. Укажите сумму и ваш банк, чтобы отсечь неподходящие ордера.</p>",
+        question: "Зачем использовать кнопку 'Фильтр' перед поиском мерчанта?",
+        options: [{text: "Чтобы отсортировать объявления по своему банку и сумме", isCorrect: true}, {text: "Чтобы биржа снизила курс", isCorrect: false}, {text: "Для изменения валюты аккаунта", isCorrect: false}],
+        hint: "Фильтры экономят время и защищают от блокировок."
+      },
+      {
+        badge: "База с нуля",
+        title: "3. Как открыть ордер на Покупку",
+        text: "<p>Нажмите зеленую кнопку <strong>«Купить»</strong>. С этого момента биржа замораживает USDT продавца на эскроу-счете.</p>",
+        question: "Что происходит с криптовалютой продавца сразу после открытия ордера?",
+        options: [{text: "Она блокируется биржей на безопасном счете", isCorrect: true}, {text: "Она сразу падает на ваш кошелек", isCorrect: false}, {text: "Она списывается как комиссия системы", isCorrect: false}],
+        hint: "Эскроу-счет защищает сделку."
+      }
+    ];
+
+    // Авто-генерация оставшихся вопросов до 60 для объемного теста
+    const шаблоныБезопасности = [
+      { t: "Риски карт третьих лиц", q: "Пришел перевод от чужого имени (ФИО карты не бьет с биржей). Ваши действия?", o1: "Не отпускать крипту, открыть апелляцию", o2: "Сразу выпустить монеты", o3: "Отправить рубли обратно без предупреждения" },
+      { t: "Мошенничество через чек", q: "Покупатель скинул скриншот чека в чат, но баланс карты пуст. Ваши действия?", o1: "Ждать отображения денег в банке, чек игнорировать", o2: "Верить чеку и отпускать монеты", o3: "Подать жалобу на банк" },
+      { t: "Схемы типа 'Треугольник'", q: "В чем суть мошеннической схемы Треугольник на P2P?", o1: "Мошенник выступает посредником, обманывая жертву на фиат и вас на крипту", o2: "Это законный метод арбитража между 3 биржами", o3: "Сбой платежного шлюза СБП" }
+    ];
+
+    for(let i = 4; i <= 60; i++) {
+      let tpl = шаблоныБезопасности[i % шаблоныБезопасности.length];
+      academyLessons.push({
+        badge: `Безопасность. Модуль ${i}`,
+        title: `${i}. ${tpl.t}`,
+        text: `<p>Изучите защитный алгоритм #${i}. Нарушение правил регламента ведет к безвозвратной заморозке банковских счетов финмониторингом.</p>`,
+        question: tpl.q,
+        options: [
+          {text: tpl.o1, isCorrect: true},
+          {text: tpl.o2, isCorrect: false},
+          {text: tpl.o3, isCorrect: false}
+        ],
+        hint: "Правила безопасности написаны потерянными депозитами."
+      });
+    }
+
+    // Рандомизатор массивов (чтобы правильный ответ не был сверху)
+    function shuffle(array) {
+      let arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // === ЛОГИКА ЖЕСТКОЙ СЕССИИ УСТРОЙСТВА ===
+    function handleLogin() {
+      const u = document.getElementById('log-username').value.trim();
+      const p = document.getElementById('log-password').value.trim();
+
+      if (VALID_USERS[u] && VALID_USERS[u] === p) {
+        currentUser = u;
+
+        if (isFirebaseReady) {
+          // Записываем наш Hardware ID в глобальную базу данных
+          firebase.database().ref('active_sessions/' + u).set({
+            device_uid: myDeviceUID,
+            last_ping: Date.now()
+          }).then(() => {
+            startDeviceGuard();
+          });
         } else {
-            // если по какой-то причине не совпадает, но не трогаем
+          // Локальная эмуляция (если Firebase еще не привязан)
+          localStorage.setItem(`local_session_active_${u}`, myDeviceUID);
+          startDeviceGuard();
         }
-    });
-</script>
+
+        switchScreen('scr-choose-exchange');
+        document.getElementById('header-tools').style.display = 'flex';
+      } else {
+        alert("Доступ отклонен. Неверные реквизиты авторизации.");
+      }
+    }
+
+    function startDeviceGuard() {
+      // Каждые 2.5 секунды проверяем, не зашел ли под нами кто-то еще
+      setInterval(() => {
+        if (!currentUser) return;
+
+        if (isFirebaseReady) {
+          firebase.database().ref('active_sessions/' + currentUser + '/device_uid').once('value').then((snapshot) => {
+            let activeUID = snapshot.val();
+            if (activeUID && activeUID !== myDeviceUID) {
+              triggerKickout();
+            }
+          });
+        } else {
+          // Проверка по вкладкам браузера / локальной сессии
+          let activeLocalUID = localStorage.getItem(`local_session_active_${currentUser}`);
+          if (activeLocalUID && activeLocalUID !== myDeviceUID) {
+            triggerKickout();
+          }
+        }
+      }, 2500);
+    }
+
+    function triggerKickout() {
+      alert("❌ ВХОД ЗАБЛОКИРОВАН: Данный аккаунт был одновременно запущен на другом смартфоне или ПК! Заходить можно только с одного устройства.");
+      logout();
+    }
+
+    // ОСТАЛЬНАЯ ЛОГИКА ИНТЕРФЕЙСА С ОПТИМИЗИРОВАННЫМИ ТЕСТАМИ
+    function selectExchange(ex) {
+      userData.exchange = ex;
+      currentSetupIndex = 0;
+      switchScreen('scr-setup-wizard');
+      renderSetupStep();
+    }
+
+    function renderSetupStep() {
+      let data = setupSteps[currentSetupIndex];
+      document.getElementById('setup-title').innerText = data.title;
+      document.getElementById('setup-desc').innerHTML = data.desc;
+      document.getElementById('setup-icon-box').innerHTML = `<i class="fas ${data.icon}"></i>`;
+    }
+
+    function nextSetupStep() {
+      currentSetupIndex++;
+      if(currentSetupIndex < setupSteps.length) {
+        renderSetupStep();
+      } else {
+        isPracticeMode = false;
+        forceReadTheoryMode = false;
+        currentAcademyIndex = 0;
+        switchScreen('scr-academy');
+        document.getElementById('global-progress').style.display = 'block';
+        renderAcademyScreen();
+      }
+    }
+
+    function renderAcademyScreen() {
+      let lesson = academyLessons[currentAcademyIndex];
+      let total = academyLessons.length;
+      let modeText = isPracticeMode ? (forceReadTheoryMode ? "Повторение" : "Экзаменационный Зачет") : "Теория";
+      
+      document.getElementById('lesson-counter-text').innerText = `${modeText}: Модуль ${currentAcademyIndex + 1} из ${total}`;
+      let pct = Math.round((currentAcademyIndex / total) * 100);
+      document.getElementById('lesson-percent-text').innerText = `${pct}%`;
+      document.getElementById('lesson-bar-fill').style.width = `${pct}%`;
+
+      document.getElementById('acad-badge').innerText = lesson.badge;
+      document.getElementById('acad-title').innerText = lesson.title;
+      document.getElementById('acad-text').innerHTML = lesson.text;
+
+      let quizBlock = document.getElementById('quiz-block-element');
+      let nextBtn = document.getElementById('acad-next-btn');
+
+      if (!isPracticeMode || (isPracticeMode && forceReadTheoryMode)) {
+        quizBlock.style.display = "none";
+        nextBtn.innerHTML = forceReadTheoryMode ? `Я понял ошибку, вернуться <i class="fas fa-undo"></i>` : `Изучил, далее <i class="fas fa-chevron-right"></i>`;
+        nextBtn.disabled = false;
+      } else {
+        quizBlock.style.display = "block";
+        document.getElementById('acad-question').innerText = lesson.question;
+        nextBtn.innerHTML = `Подтвердить выбор <i class="fas fa-lock"></i>`;
+        nextBtn.disabled = true;
+
+        let optionsWrapper = document.getElementById('acad-options');
+        optionsWrapper.innerHTML = '';
+        document.getElementById('acad-feedback').style.display = 'none';
+
+        // КРИТИЧЕСКИЙ ФИКС: Перемешиваем ответы, чтобы правильный не был всегда первым!
+        let randomizedOptions = shuffle(lesson.options);
+
+        randomizedOptions.forEach(opt => {
+          let btn = document.createElement('button');
+          btn.className = 'option-btn';
+          btn.innerHTML = `<i class="far fa-circle"></i> ${opt.text}`;
+          btn.onclick = () => selectPracticeOption(btn, opt.isCorrect, lesson.hint);
+          optionsWrapper.appendChild(btn);
+        });
+      }
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function handleAcademyNavigation() {
+      let total = academyLessons.length;
+      if (!isPracticeMode) {
+        currentAcademyIndex++;
+        if (currentAcademyIndex < total) {
+          renderAcademyScreen();
+        } else {
+          alert("Теоретический курс изучен. Начинается сквозной экзамен из 60 вопросов с перемешанными ответами!");
+          isPracticeMode = true;
+          forceReadTheoryMode = false;
+          currentAcademyIndex = 0;
+          renderAcademyScreen();
+        }
+      } else if (isPracticeMode && forceReadTheoryMode) {
+        forceReadTheoryMode = false;
+        renderAcademyScreen();
+      } else {
+        currentAcademyIndex++;
+        if (currentAcademyIndex < total) {
+          renderAcademyScreen();
+        } else {
+          document.getElementById('global-progress').style.display = 'none';
+          switchScreen('scr-finish');
+        }
+      }
+    }
+
+    function selectPracticeOption(el, isCorrect, hint) {
+      let btns = document.querySelectorAll('.option-btn');
+      let fb = document.getElementById('acad-feedback');
+      
+      btns.forEach(b => { b.classList.remove('correct', 'wrong'); b.querySelector('i').className = 'far fa-circle'; });
+
+      if(isCorrect) {
+        el.classList.add('correct');
+        el.querySelector('i').className = 'fas fa-check-circle';
+        fb.style.display = 'block';
+        fb.innerHTML = `<span style="color:#4caf50;">✔ Верно! ${hint}</span>`;
+        document.getElementById('acad-next-btn').disabled = false;
+      } else {
+        el.classList.add('wrong');
+        el.querySelector('i').className = 'fas fa-times-circle';
+        fb.style.display = 'block';
+        fb.innerHTML = `<span style="color:#f44336;">❌ Неверно! Ошибка отбрасывает вас на изучение теории этого правила.</span>`;
+        
+        setTimeout(() => {
+          forceReadTheoryMode = true;
+          renderAcademyScreen();
+        }, 2000);
+      }
+    }
+
+    function switchScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function toggleProfile(show) {
+      if(show) {
+        document.getElementById('p-name').innerText = currentUser || '--';
+        document.getElementById('p-ex').innerText = userData.exchange || 'Не выбрана';
+        document.getElementById('p-prog').innerText = `${currentAcademyIndex + 1} из ${academyLessons.length}`;
+        document.getElementById('prof-modal').style.display = 'flex';
+      } else {
+        document.getElementById('prof-modal').style.display = 'none';
+      }
+    }
+
+    function logout() {
+      currentUser = "";
+      currentSetupIndex = 0; currentAcademyIndex = 0; isPracticeMode = false; forceReadTheoryMode = false;
+      document.getElementById('global-progress').style.display = 'none';
+      document.getElementById('header-tools').style.display = 'none';
+      document.getElementById('log-username').value = "";
+      document.getElementById('log-password').value = "";
+      toggleProfile(false);
+      switchScreen('scr-login');
+    }
+  </script>
 </body>
 </html>
