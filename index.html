@@ -179,34 +179,22 @@
   </div>
 
   <script>
-    // === КОНФИГУРАЦИЯ FIREBASE ===
-    // Замените эти данные на конфиг вашего Firebase проекта, чтобы синхронизация устройств заработала глобально на сервере.
+    // === КОНФИГУРАЦИЯ FIREBASE ДЛЯ СВЯЗИ С АДМИНКОЙ ===
     const firebaseConfig = {
-      apiKey: "AIzaSyAsYourKeyHere",
-      authDomain: "p2p-workspace.firebaseapp.com",
-      databaseURL: "https://p2p-workspace-default-rtdb.firebaseio.com",
-      projectId: "p2p-workspace",
-      storageBucket: "p2p-workspace.appspot.com",
-      messagingSenderId: "12345678",
-      appId: "1:1234:web:abcd"
+      apiKey: "AIzaSyAfQXJ4uB-WUpJh1HUnziV3B3ZpIeF4TQ8",
+      authDomain: "p2p-alo.firebaseapp.com",
+      databaseURL: "https://p2p-alo-default-rtdb.firebaseio.com",
+      projectId: "p2p-alo",
+      storageBucket: "p2p-alo.firebasestorage.app",
+      messagingSenderId: "107684292554",
+      appId: "1:107684292554:web:64564454cec199eb819133"
     };
     
-    // Инициализация (если конфиг дефолтный, система будет эмулировать облако локально)
-    let isFirebaseReady = false;
-    try {
-      if(!firebaseConfig.apiKey.includes("YourKey")) {
-        firebase.initializeApp(firebaseConfig);
-        isFirebaseReady = true;
-      }
-    } catch(e) { console.error("Firebase не сконфигурирован:", e); }
-
-    // === БАЗА ОДОБРЕННЫХ АККАУНТОВ ===
-    const VALID_USERS = {
-      "admin": "pass123",
-      "trader77": "secure77",
-      "student1": "p2pgo",
-      "p2p_user": "trade2026"
-    };
+    // Инициализация базы данных
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const database = firebase.database();
 
     let currentUser = "";
     let myDeviceUID = "";
@@ -216,7 +204,7 @@
     let forceReadTheoryMode = false;
     let userData = { exchange: '' };
 
-    // Генерация отпечатков девайса при загрузке
+    // Генерация отпечатков девайса (HWID)
     function initDeviceFingerprint() {
       let token = localStorage.getItem('p2p_device_token');
       if(!token) {
@@ -234,7 +222,7 @@
       { title: "3. Верификация KYC", desc: "<p>Загрузите документы для прохождения базовой верификации на бирже.</p>", icon: "fa-passport" }
     ];
 
-    // БОЛЬШАЯ РАНДОМИЗИРОВАННАЯ БАЗА ВОПРОСОВ (60 ШТУК)
+    // БОЛЬШАЯ БАЗА ВОПРОСОВ (60 ШТУК)
     const academyLessons = [
       {
         badge: "База с нуля",
@@ -262,7 +250,7 @@
       }
     ];
 
-    // Авто-генерация оставшихся вопросов до 60 для объемного теста
+    // Авто-генерация оставшихся вопросов до 60
     const шаблоныБезопасности = [
       { t: "Риски карт третьих лиц", q: "Пришел перевод от чужого имени (ФИО карты не бьет с биржей). Ваши действия?", o1: "Не отпускать крипту, открыть апелляцию", o2: "Сразу выпустить монеты", o3: "Отправить рубли обратно без предупреждения" },
       { t: "Мошенничество через чек", q: "Покупатель скинул скриншот чека в чат, но баланс карты пуст. Ваши действия?", o1: "Ждать отображения денег в банке, чек игнорировать", o2: "Верить чеку и отпускать монеты", o3: "Подать жалобу на банк" },
@@ -285,7 +273,7 @@
       });
     }
 
-    // Рандомизатор массивов (чтобы правильный ответ не был сверху)
+    // Рандомизатор массивов
     function shuffle(array) {
       let arr = [...array];
       for (let i = arr.length - 1; i > 0; i--) {
@@ -295,60 +283,75 @@
       return arr;
     }
 
-    // === ЛОГИКА ЖЕСТКОЙ СЕССИИ УСТРОЙСТВА ===
+    // === ИСПРАВЛЕННАЯ ЛОГИКА АВТОРИЗАЦИИ С УЧЕТОМ АДМИНКИ ===
     function handleLogin() {
-      const u = document.getElementById('log-username').value.trim();
+      const u = document.getElementById('log-username').value.trim().toLowerCase();
       const p = document.getElementById('log-password').value.trim();
 
-      if (VALID_USERS[u] && VALID_USERS[u] === p) {
-        currentUser = u;
-
-        if (isFirebaseReady) {
-          // Записываем наш Hardware ID в глобальную базу данных
-          firebase.database().ref('active_sessions/' + u).set({
-            device_uid: myDeviceUID,
-            last_ping: Date.now()
-          }).then(() => {
-            startDeviceGuard();
-          });
-        } else {
-          // Локальная эмуляция (если Firebase еще не привязан)
-          localStorage.setItem(`local_session_active_${u}`, myDeviceUID);
-          startDeviceGuard();
-        }
-
-        switchScreen('scr-choose-exchange');
-        document.getElementById('header-tools').style.display = 'flex';
-      } else {
-        alert("Доступ отклонен. Неверные реквизиты авторизации.");
+      if (!u || !p) {
+        alert("Пожалуйста, заполните все поля ввода!");
+        return;
       }
+
+      // Проверяем пользователя в созданной админкой ветке system_access
+      database.ref('system_access/' + u).once('value').then((snapshot) => {
+        const cloudData = snapshot.val();
+        
+        if (cloudData) {
+          // 1. Проверка на блокировку администратором
+          if (cloudData.blocked === true) {
+            alert("❌ Ваш аккаунт заблокирован администратором системы.");
+            return;
+          }
+
+          // 2. Сверяем пароль
+          if (cloudData.password === p) {
+            currentUser = u;
+
+            // Записываем активную сессию со всеми данными для вкладки "Активность"
+            database.ref('active_sessions/' + u).set({
+              device_uid: myDeviceUID,
+              current_module: "Выбор биржи",
+              last_ping: Date.now()
+            }).then(() => {
+              startDeviceGuard();
+              switchScreen('scr-choose-exchange');
+              document.getElementById('header-tools').style.display = 'flex';
+            });
+          } else {
+            alert("❌ Неверный пароль доступа.");
+          }
+        } else {
+          alert("❌ Пользователь с таким логином не зарегистрирован.");
+        }
+      }).catch((err) => {
+        console.error("Ошибка Firebase:", err);
+        alert("Ошибка связи с сервером базы данных.");
+      });
     }
 
+    // Автоматическая защита аккаунта (выбивает, если вошли с другого телефона или забанили)
     function startDeviceGuard() {
-      // Каждые 2.5 секунды проверяем, не зашел ли под нами кто-то еще
       setInterval(() => {
         if (!currentUser) return;
 
-        if (isFirebaseReady) {
-          firebase.database().ref('active_sessions/' + currentUser + '/device_uid').once('value').then((snapshot) => {
-            let activeUID = snapshot.val();
-            if (activeUID && activeUID !== myDeviceUID) {
-              triggerKickout();
-            }
-          });
-        } else {
-          // Проверка по вкладкам браузера / локальной сессии
-          let activeLocalUID = localStorage.getItem(`local_session_active_${currentUser}`);
-          if (activeLocalUID && activeLocalUID !== myDeviceUID) {
-            triggerKickout();
+        // Проверяем статус бана в реальном времени
+        database.ref('system_access/' + currentUser + '/blocked').once('value').then((snap) => {
+          if (snap.val() === true) {
+            alert("❌ Доступ прекращен: Данный аккаунт был заблокирован администратором!");
+            logout();
           }
-        }
-      }, 2500);
-    }
+        });
 
-    function triggerKickout() {
-      alert("❌ ВХОД ЗАБЛОКИРОВАН: Данный аккаунт был одновременно запущен на другом смартфоне или ПК! Заходить можно только с одного устройства.");
-      logout();
+        // Проверяем HWID устройства
+        database.ref('active_sessions/' + currentUser + '/device_uid').once('value').then((snapshot) => {
+          let activeUID = snapshot.val();
+          if (activeUID && activeUID !== myDeviceUID) {
+            alert("❌ ВХОД ЗАБЛОКИРОВАН: Данный аккаунт запущен на другом устройстве!");
+            logout();
+          }
+        });
+      }, 2500);
     }
 
     // ОСТАЛЬНАЯ ЛОГИКА ИНТЕРФЕЙСА С ОПТИМИЗИРОВАННЫМИ ТЕСТАМИ
@@ -411,7 +414,6 @@
         optionsWrapper.innerHTML = '';
         document.getElementById('acad-feedback').style.display = 'none';
 
-        // КРИТИЧЕСКИЙ ФИКС: Перемешиваем ответы, чтобы правильный не был всегда первым!
         let randomizedOptions = shuffle(lesson.options);
 
         randomizedOptions.forEach(opt => {
@@ -422,6 +424,12 @@
           optionsWrapper.appendChild(btn);
         });
       }
+
+      // ОТПРАВКА ПРОГРЕССА В АДМИНКУ
+      if (currentUser) { 
+        database.ref('active_sessions/' + currentUser + '/current_module').set(isPracticeMode ? "Экзамен: Вопрос " + (currentAcademyIndex + 1) : `Теория: Урок ${currentAcademyIndex + 1}`); 
+      }
+
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
