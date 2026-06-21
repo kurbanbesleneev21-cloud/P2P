@@ -3,183 +3,583 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>P2P.Workspace Pro — Анти-Шеринг Система</title>
+  <title>P2P.Workspace Pro — Система Обучения</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
   <style>
-    * {
-      margin: 0; padding: 0; box-sizing: border-box;
+    :root {
+      --bg-primary: #07090e;
+      --bg-secondary: #0b0d15;
+      --bg-card: #111420;
+      --gold: #f0b34b;
+      --gold-light: #f7d875;
+      --accent: #4f8cff;
+      --danger: #f44336;
+      --success: #4caf50;
+      --text-primary: #eaeef2;
+      --text-secondary: #8899aa;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-light: rgba(255, 255, 255, 0.1);
+      --glass-bg: rgba(11, 13, 21, 0.8);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .light-theme {
+      --bg-primary: #f5f7fa;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #1a1d26;
+      --text-secondary: #5a6070;
+      --border: rgba(0, 0, 0, 0.08);
+      --border-light: rgba(0, 0, 0, 0.12);
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
       -webkit-tap-highlight-color: transparent;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
     }
-    body { background: #07090e; color: #eaeef2; line-height: 1.5; }
-    
+    .splash-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #07090e;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+    .splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .splash-logo {
+      width: 110px; height: 110px;
+      background: linear-gradient(145deg, #f0b34b 0%, #f7d875 30%, #fce38a 60%, #f0b34b 100%);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      color: #07090e;
+      font-weight: 900;
+      animation: splashPulse 2s ease-in-out infinite;
+      box-shadow: 0 0 80px rgba(240, 179, 75, 0.6), 0 0 120px rgba(247, 216, 117, 0.3), inset 0 -4px 8px rgba(0,0,0,0.2), inset 0 4px 8px rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .splash-logo::after {
+      content: '';
+      position: absolute;
+      top: -30%;
+      left: -30%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transform: rotate(25deg);
+      animation: logoShine 3s ease-in-out infinite;
+    }
+    @keyframes logoShine {
+      0% { left: -30%; }
+      50% { left: 100%; }
+      100% { left: 100%; }
+    }
+    @keyframes splashPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 80px rgba(240, 179, 75, 0.6), 0 0 120px rgba(247, 216, 117, 0.3); }
+      50% { transform: scale(1.08); box-shadow: 0 0 100px rgba(240, 179, 75, 0.8), 0 0 160px rgba(247, 216, 117, 0.5); }
+    }
+    .splash-title {
+      margin-top: 28px;
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f0b34b 0%, #fce38a 50%, #f7d875 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+      animation: titleGlow 2s ease-in-out infinite alternate;
+    }
+    @keyframes titleGlow {
+      0% { filter: drop-shadow(0 0 8px rgba(240, 179, 75, 0.5)); }
+      100% { filter: drop-shadow(0 0 20px rgba(247, 216, 117, 0.8)); }
+    }
+    .splash-subtitle {
+      color: #8899aa;
+      font-size: 0.9rem;
+      margin-top: 10px;
+      animation: fadeInUp 0.8s ease 0.3s both;
+      letter-spacing: 0.5px;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .splash-loader {
+      width: 220px;
+      height: 5px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      margin-top: 40px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .splash-loader-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #f0b34b, #fce38a, #f7d875);
+      border-radius: 10px;
+      animation: splashLoad 2.5s ease forwards;
+      box-shadow: 0 0 15px rgba(240, 179, 75, 0.5);
+    }
+    @keyframes splashLoad { 0% { width: 0%; } 60% { width: 85%; } 100% { width: 100%; } }
     .mobile-header {
-      position: sticky; top: 0; background: #0b0d15;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 100;
+      position: sticky; top: 0; z-index: 100;
+      background: var(--glass-bg); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
     }
-    .logo { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, #f0b34b, #f7d875); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
-    .header-actions { display: flex; gap: 8px; align-items: center; }
-    .btn-circle { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-    .top-progress-container { background: #0b0d15; padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
-    .progress-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: #8899aa; margin-bottom: 6px; }
-    .progress-bar-bg { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; overflow: hidden; }
-    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #f0b34b, #f7d875); transition: width 0.3s ease; }
-
-    .app-content { padding: 16px; padding-bottom: 100px; max-width: 500px; margin: 0 auto; }
-
-    .screen { display: none; }
+    .logo-section { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(145deg, #f0b34b 0%, #fce38a 40%, #f7d875 100%);
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #07090e;
+      font-weight: 900;
+      box-shadow: 0 0 20px rgba(240, 179, 75, 0.4), inset 0 -2px 4px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      top: -20%;
+      left: -20%;
+      width: 50%;
+      height: 80%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: rotate(20deg);
+      animation: logoShine 4s ease-in-out infinite;
+    }
+    .logo-text {
+      font-size: 1.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 1px;
+    }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-circle {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all var(--transition); position: relative;
+    }
+    .btn-circle:active { transform: scale(0.92); }
+    .user-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #4f8cff, #7b61ff);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem; color: #fff; cursor: pointer;
+      border: 2px solid var(--gold); position: relative;
+    }
+    .online-dot {
+      width: 10px; height: 10px; background: var(--success);
+      border-radius: 50%; position: absolute; bottom: -2px; right: -2px;
+      border: 2px solid var(--bg-primary);
+    }
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: var(--glass-bg); backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-around;
+      padding: 8px 0 env(safe-area-inset-bottom, 12px);
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      cursor: pointer; color: var(--text-secondary); transition: all var(--transition);
+      padding: 6px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 500;
+    }
+    .nav-item.active { color: var(--gold); background: rgba(247, 216, 117, 0.08); }
+    .nav-item i { font-size: 1.3rem; }
+    .app-content {
+      padding: 12px 16px; padding-bottom: 120px;
+      max-width: 500px; margin: 0 auto;
+    }
+    .screen { display: none; animation: fadeSlideIn 0.4s ease; }
     .screen.active { display: block; }
-
-    .card { background: #0b0d15; border: 1px solid rgba(255,255,255,0.06); padding: 24px 16px; border-radius: 24px; width: 100%; }
-    .card h2 { font-size: 1.4rem; margin-bottom: 12px; text-align: center; }
-    
-    .form-group { margin-bottom: 16px; text-align: left; }
-    .form-group label { display: block; font-size: 0.85rem; color: #8899aa; margin-bottom: 6px; padding-left: 4px; }
-    .input-field { width: 100%; padding: 14px 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; color: #fff; font-size: 0.95rem; outline: none; }
-    .input-field:focus { border-color: #f7d875; }
-
-    .setup-step-box { background: #111420; border: 1px solid rgba(255,255,255,0.04); border-radius: 20px; padding: 20px 16px; margin-bottom: 20px; }
-    .setup-visual { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; color: #f7d875; font-size: 1.8rem; }
-
-    .lesson-badge { display: inline-block; background: rgba(247, 216, 117, 0.08); color: #f7d875; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; border: 1px solid rgba(247, 216, 117, 0.1); }
-    .lesson-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 14px; }
-    .lesson-text { color: #c0cedc; font-size: 0.95rem; margin-bottom: 24px; }
-    .lesson-text p { margin-bottom: 12px; }
-    .lesson-text strong { color: #f7d875; }
-
-    .btn-action { width: 100%; background: #f7d875; color: #0b0d15; border: none; padding: 16px; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: all var(--transition);
+    }
+    .card:active { transform: scale(0.98); }
+    .streak-card {
+      background: linear-gradient(135deg, #1a1d2e, #1f2335);
+      border-radius: var(--radius-lg); padding: 24px; text-align: center;
+      border: 1px solid var(--border); margin-bottom: 16px;
+    }
+    .streak-fire { font-size: 3rem; display: inline-block; animation: bounce 1s ease infinite; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    .level-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(247, 216, 117, 0.1); border: 1px solid rgba(247, 216, 117, 0.2);
+      padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; font-weight: 600;
+      color: var(--gold); margin-top: 8px;
+    }
+    .progress-ring {
+      width: 80px; height: 80px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .progress-ring svg { transform: rotate(-90deg); }
+    .progress-ring-text {
+      position: absolute; font-size: 1.2rem; font-weight: 700; color: var(--gold);
+    }
+    .toast-container {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;
+      display: flex; flex-direction: column; gap: 8px; width: 90%; max-width: 400px;
+    }
+    .toast {
+      padding: 14px 20px; border-radius: 14px; color: #fff;
+      font-weight: 500; font-size: 0.9rem; animation: toastIn 0.4s ease;
+      box-shadow: var(--shadow-lg); text-align: center;
+    }
+    @keyframes toastIn {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .toast-success { background: #1b5e20; border: 1px solid #4caf50; }
+    .toast-error { background: #b71c1c; border: 1px solid #f44336; }
+    .toast-info { background: #0d47a1; border: 1px solid #4f8cff; }
+    .toast-warning { background: #e65100; border: 1px solid #ff9800; }
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 500px;
+      max-height: 85vh; overflow-y: auto;
+    }
+    .btn-action {
+      width: 100%; background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      color: #07090e; border: none; padding: 16px; border-radius: 50px;
+      font-weight: 700; font-size: 1rem; cursor: pointer; transition: all var(--transition);
+      margin-top: 4px;
+    }
+    .btn-action:active { transform: scale(0.96); }
     .btn-action:disabled { background: #202533; color: #546575; cursor: not-allowed; }
-
-    .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
-    .option-btn { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); padding: 14px 16px; border-radius: 14px; color: #b0c0d0; font-size: 0.9rem; text-align: left; cursor: pointer; width: 100%; }
-    .option-btn.correct { background: rgba(76, 175, 80, 0.12) !important; border-color: #4caf50 !important; color: #4caf50 !important; font-weight: 600; }
-    .option-btn.wrong { background: rgba(244, 67, 54, 0.12) !important; border-color: #f44336 !important; color: #f44336 !important; }
-    .feedback-msg { margin-top: 14px; font-size: 0.85rem; font-weight: 500; text-align: center; display: none; }
-
-    .profile-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,7,12,0.95); backdrop-filter: blur(8px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .profile-card { background: #111420; border: 1px solid rgba(255,255,255,0.08); width: 100%; max-width: 400px; border-radius: 24px; padding: 24px; position: relative; }
-    .profile-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
+    .btn-secondary {
+      background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);
+    }
+    .input-field {
+      width: 100%; padding: 14px 16px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      color: var(--text-primary); font-size: 0.95rem; outline: none; margin-top: 4px;
+    }
+    .input-field:focus { border-color: var(--gold); }
+    .search-input {
+      width: 100%; padding: 12px 16px; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: 30px; color: var(--text-primary);
+      font-size: 0.9rem; outline: none; margin-bottom: 16px;
+    }
+    .search-input:focus { border-color: var(--gold); }
+    .offline-banner {
+      background: #b71c1c; color: #fff; text-align: center; padding: 8px;
+      font-size: 0.8rem; display: none;
+    }
+    .offline-banner.show { display: block; }
+    .theme-switch {
+      width: 50px; height: 28px; background: var(--border);
+      border-radius: 30px; position: relative; cursor: pointer; transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .theme-switch.active { background: var(--gold); }
+    .theme-switch::after {
+      content: ''; width: 22px; height: 22px; background: #fff;
+      border-radius: 50%; position: absolute; top: 3px; left: 3px;
+      transition: all var(--transition);
+    }
+    .theme-switch.active::after { left: 25px; }
+    .confetti-piece {
+      position: fixed; z-index: 9999; pointer-events: none;
+      animation: confettiFall 3s ease forwards;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+    .theory-block {
+      background: rgba(247, 216, 117, 0.05);
+      border-left: 3px solid var(--gold);
+      padding: 16px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin: 16px 0;
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+    .practice-block {
+      background: rgba(79, 140, 255, 0.05);
+      border-left: 3px solid var(--accent);
+      padding: 16px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin: 16px 0;
+    }
+    .danger-zone {
+      background: rgba(244, 67, 54, 0.08);
+      border-left: 3px solid var(--danger);
+      padding: 12px 16px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin: 12px 0;
+    }
+    .text-center { text-align: center; }
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mb-16 { margin-bottom: 16px; }
   </style>
 </head>
 <body>
 
-  <header class="mobile-header">
-    <div class="logo"><i class="fas fa-shield-alt"></i> P2P.Workspace</div>
-    <div class="header-actions" id="header-tools" style="display:none;">
-      <button class="btn-circle" onclick="toggleProfile(true)"><i class="fas fa-user-astronaut"></i></button>
-      <button class="btn-circle" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+  <div class="splash-screen" id="splash-screen">
+    <div class="splash-logo">⚡</div>
+    <div class="splash-title">P2P.Workspace Pro</div>
+    <div class="splash-subtitle">Система анти-шеринг обучения</div>
+    <div class="splash-loader"><div class="splash-loader-fill"></div></div>
+  </div>
+
+  <div class="offline-banner" id="offline-banner">📡 Отсутствует подключение к интернету</div>
+  <div class="toast-container" id="toast-container"></div>
+
+  <header class="mobile-header" id="header-main" style="display:none;">
+    <div class="logo-section" onclick="navigateTo('dashboard')">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">P2P.Pro</div>
+    </div>
+    <div class="header-actions">
+      <span id="sync-status" style="font-size:0.7rem; color:var(--success);">⚡ Онлайн</span>
+      <button class="btn-circle" onclick="showNotifications()"><i class="fas fa-bell"></i></button>
+      <div class="user-avatar" onclick="toggleProfileMenu()" id="avatar-btn">
+        <span id="avatar-initial">U</span>
+        <div class="online-dot"></div>
+      </div>
     </div>
   </header>
 
-  <div class="top-progress-container" id="global-progress" style="display:none;">
-    <div class="progress-meta">
-      <span id="lesson-counter-text">Загрузка модулей безопасности...</span>
-      <span id="lesson-percent-text">0%</span>
+  <nav class="bottom-nav" id="bottom-nav" style="display:none;">
+    <div class="nav-item active" data-screen="dashboard" onclick="navigateTo('dashboard')">
+      <i class="fas fa-home"></i><span>Главная</span>
     </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="lesson-bar-fill"></div>
+    <div class="nav-item" data-screen="academy" onclick="navigateTo('academy')">
+      <i class="fas fa-graduation-cap"></i><span>Обучение</span>
     </div>
-  </div>
+    <div class="nav-item" data-screen="results" onclick="navigateTo('results')">
+      <i class="fas fa-chart-bar"></i><span>Прогресс</span>
+    </div>
+    <div class="nav-item" data-screen="settings" onclick="navigateTo('settings')">
+      <i class="fas fa-cog"></i><span>Настройки</span>
+    </div>
+  </nav>
 
-  <div class="app-content">
+  <div class="app-content" id="app-content">
 
+    <!-- Login Screen -->
     <div class="screen active" id="scr-login">
+      <div class="card text-center">
+        <div style="font-size:4rem; margin:20px 0;">🔐</div>
+        <h2 style="margin-bottom:8px;">Hardware ID Контроль</h2>
+        <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:20px;">
+          Один аккаунт — одно устройство.<br>Шеринг полностью заблокирован.
+        </p>
+        <div style="margin-bottom:16px; text-align:left;">
+          <label style="font-size:0.8rem; color:var(--text-secondary);">Ваш логин</label>
+          <input type="text" id="log-username" class="input-field" placeholder="Введите логин" autocomplete="username">
+        </div>
+        <div style="margin-bottom:16px; text-align:left;">
+          <label style="font-size:0.8rem; color:var(--text-secondary);">Пароль</label>
+          <input type="password" id="log-password" class="input-field" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="btn-action" id="login-btn" onclick="handleLogin()">
+          Авторизовать устройство <i class="fas fa-sign-in-alt"></i>
+        </button>
+        <p style="font-size:0.7rem; color:var(--text-secondary); margin-top:12px;">
+          <i class="fas fa-shield-alt"></i> При входе устройство привязывается к аккаунту
+        </p>
+        <p style="font-size:0.65rem; color:var(--danger); margin-top:8px;">
+          ⚠️ При входе на другом устройстве акаунт будет заблокирыван 
+        </p>
+      </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div class="screen" id="scr-dashboard">
+      <div class="streak-card">
+        <div class="streak-fire">🔥</div>
+        <h2 style="font-size:1.4rem;">Ударный темп: <span id="streak-count">0</span> дн.</h2>
+        <p style="color:var(--text-secondary); font-size:0.85rem;">Не прерывайте обучение!</p>
+        <span class="level-badge"><i class="fas fa-star"></i> <span id="user-level">Новичок</span></span>
+      </div>
+      <div class="card text-center" id="continue-block">
+        <i class="fas fa-play-circle" style="font-size:2rem; color:var(--gold);"></i>
+        <h3 style="margin:8px 0;">Продолжить обучение</h3>
+        <p style="color:var(--text-secondary); font-size:0.85rem;" id="continue-text">Загрузка...</p>
+        <button class="btn-action mt-8" onclick="navigateTo('academy')">
+          Продолжить <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
       <div class="card">
-        <div style="text-align:center; margin-bottom:20px;">
-          <i class="fas fa-fingerprint" style="font-size:2.5rem; color:#f7d875; margin-bottom:10px;"></i>
-          <h2>Hardware ID Контроль</h2>
-          <p style="color:#8899aa; font-size:0.85rem;">При входе аккаунт жестко привязывается к текущему устройству.</p>
-        </div>
-
-        <div class="form-group">
-          <label>Ваш Учениковский Логин</label>
-          <input type="text" id="log-username" class="input-field" placeholder="Введите логин">
-        </div>
-
-        <div class="form-group">
-          <label>Пароль</label>
-          <input type="password" id="log-password" class="input-field" placeholder="••••••••">
-        </div>
-
-        <button class="btn-action" id="login-submit-btn" onclick="handleLogin()">Авторизовать устройство <i class="fas fa-sign-in-alt"></i></button>
-      </div>
-    </div>
-
-    <div class="screen" id="scr-choose-exchange">
-      <h3 style="font-size:1.2rem; text-align:center; margin-bottom:16px;">Где вы будете разворачивать рабочий профиль?</h3>
-      <div class="setup-step-box" style="cursor:pointer;" onclick="selectExchange('HTX')">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <div style="background:#1c61f3; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800;">H</div>
+        <h3 style="margin-bottom:12px;">📊 Прогресс курса</h3>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div class="progress-ring">
+            <svg width="80" height="80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6"/>
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#f7d875" stroke-width="6" 
+                      stroke-dasharray="213.6" stroke-dashoffset="213.6" id="dash-circle" 
+                      style="transition: stroke-dashoffset 0.8s ease;"/>
+            </svg>
+            <span class="progress-ring-text" id="dash-pct">0%</span>
+          </div>
           <div>
-            <h4 style="color:#fff;">Криптобиржа HTX</h4>
-            <p style="font-size:0.75rem; color:#8899aa;">Оптимальный выбор для работы со всеми банками СНГ.</p>
+            <p style="font-weight:600;" id="dash-lessons-done">0/60 уроков</p>
+            <p style="color:var(--text-secondary); font-size:0.8rem;">Экзамен: <span id="dash-exam-status">Не начат</span></p>
+            <p style="color:var(--text-secondary); font-size:0.7rem;">Сила защиты: <span id="dash-protection">Базовая</span></p>
           </div>
         </div>
       </div>
-      <div class="setup-step-box" style="cursor:pointer;" onclick="selectExchange('Bybit')">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <div style="background:#f1a214; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:800; color:#000;">B</div>
-          <div>
-            <h4 style="color:#fff;">Криптобиржа Bybit</h4>
-            <p style="font-size:0.75rem; color:#8899aa;">Строгий комплаенс, высокая базовая ликвидность.</p>
-          </div>
+      <div class="card">
+        <h3 style="margin-bottom:12px;">🏆 Достижения</h3>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;" id="dash-achievements">
+          <div style="text-align:center; opacity:0.3;"><div style="font-size:2rem;">🔥</div><small>3 дня</small></div>
+          <div style="text-align:center; opacity:0.3;"><div style="font-size:2rem;">📚</div><small>10 уроков</small></div>
+          <div style="text-align:center; opacity:0.3;"><div style="font-size:2rem;">💡</div><small>Экзамен</small></div>
+          <div style="text-align:center; opacity:0.3;"><div style="font-size:2rem;">⭐</div><small>Эксперт</small></div>
         </div>
       </div>
     </div>
 
-    <div class="screen" id="scr-setup-wizard">
-      <div class="lesson-badge">Настройка кошелька</div>
-      <h3 class="lesson-title" id="setup-title">Шаг</h3>
-      <div class="lesson-text" id="setup-desc">Описание</div>
-      <div class="setup-visual" id="setup-icon-box"><i class="fas fa-qrcode"></i></div>
-      <button class="btn-action" onclick="nextSetupStep()">Подтвердить шаг <i class="fas fa-chevron-right"></i></button>
-    </div>
-
+    <!-- Academy Screen -->
     <div class="screen" id="scr-academy">
-      <div class="lesson-badge" id="acad-badge">Модуль</div>
-      <h3 class="lesson-title" id="acad-title">Загрузка...</h3>
-      <div class="lesson-text" id="acad-text">Текст...</div>
-
-      <div class="setup-step-box" id="quiz-block-element" style="display:none;">
-        <div style="font-weight:600; font-size:0.95rem; margin-bottom:10px; color:#f7d875;">
-          <i class="fas fa-question-circle"></i> <span id="acad-question">Вопрос</span>
-        </div>
-        <div class="quiz-options" id="acad-options"></div>
-        <div class="feedback-msg" id="acad-feedback"></div>
+      <div style="margin-bottom:16px;">
+        <button class="btn-action btn-secondary" onclick="switchAcademyTab('theory')" id="academy-tab-theory" style="width:48%; display:inline-block; margin-right:4%;">
+          <i class="fas fa-book"></i> Теория
+        </button>
+        <button class="btn-action" onclick="switchAcademyTab('practice')" id="academy-tab-practice" style="width:48%; display:inline-block;">
+          <i class="fas fa-question-circle"></i> Практика
+        </button>
       </div>
-
-      <button class="btn-action" id="acad-next-btn" onclick="handleAcademyNavigation()">Далее</button>
+      <input type="text" class="search-input" placeholder="🔍 Поиск по урокам..." id="lesson-search" oninput="filterLessons()">
+      <div id="academy-theory">
+        <div class="theory-block">
+          <h3 style="color:var(--gold); margin-bottom:8px;">📖 Текстовое обучение</h3>
+          <p style="color:var(--text-secondary); font-size:0.85rem;">
+            Каждый урок содержит полное описание схемы: как она работает, кто участники, как трейдер может попасться, реальные последствия и конкретные шаги защиты.
+          </p>
+        </div>
+        <div id="theory-lesson-list"><p style="text-align:center; color:var(--text-secondary);">Загрузка уроков...</p></div>
+      </div>
+      <div id="academy-practice" style="display:none;">
+        <div class="practice-block">
+          <h3 style="color:var(--accent); margin-bottom:8px;">✍️ Практические вопросы</h3>
+          <p style="color:var(--text-secondary); font-size:0.85rem;">
+            Вопросы перемешаны. При ошибке вы вернётесь к теории этого урока.
+          </p>
+        </div>
+        <div id="practice-questions-list"><p style="text-align:center; color:var(--text-secondary);">Загрузка вопросов...</p></div>
+      </div>
     </div>
 
-    <div class="screen" id="scr-finish">
-      <div class="card" style="text-align:center;">
-        <i class="fas fa-crown" style="font-size:4rem; color:#4caf50; margin-bottom:16px;"></i>
-        <h2>Курс полностью пройден!</h2>
-        <button class="btn-action" onclick="logout()">Выйти</button>
+    <!-- Results Screen -->
+    <div class="screen" id="scr-results">
+      <div class="card"><h3>📈 Мои результаты</h3><div id="results-content"><p style="color:var(--text-secondary);">Загрузка статистики...</p></div></div>
+      <div class="card"><h3>📅 Календарь активности</h3><div id="calendar-widget" style="display:flex;gap:4px;flex-wrap:wrap;"></div></div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div class="screen" id="scr-settings">
+      <div class="card">
+        <h3>⚙️ Настройки интерфейса</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0;">
+          <span>🌙 Тёмная тема</span>
+          <div class="theme-switch active" id="theme-toggle" onclick="toggleTheme()"></div>
+        </div>
+        <button class="btn-action btn-secondary mt-8" onclick="showFAQ()"><i class="fas fa-question-circle"></i> Помощь и FAQ</button>
+        <button class="btn-action btn-secondary mt-8" onclick="navigateTo('dashboard')"><i class="fas fa-home"></i> На главную</button>
+        <button class="btn-action mt-16" style="background:var(--danger); color:#fff;" onclick="showLogoutConfirm()"><i class="fas fa-sign-out-alt"></i> Выйти из аккаунта</button>
+      </div>
+    </div>
+
+    <!-- Finish Screen -->
+    <div class="screen" id="scr-finish" style="text-align:center;">
+      <div class="card">
+        <div style="font-size:5rem;">🎓</div>
+        <h2>Поздравляем!</h2>
+        <p style="margin:12px 0;">Вы полностью завершили курс P2P.Workspace Pro</p>
+        <div style="margin:20px 0; padding:20px; border:2px dashed var(--gold); border-radius:16px;">
+          <h3 style="color:var(--gold);">📜 Сертификат</h3>
+          <p style="font-size:1.2rem; font-weight:700;" id="cert-name">Студент</p>
+          <p style="font-size:0.8rem; color:var(--text-secondary);">Дата завершения: <span id="cert-date"></span></p>
+          <p style="font-size:0.8rem; color:var(--gold);">Уровень: <span id="cert-level">Эксперт</span></p>
+        </div>
+        <button class="btn-action" onclick="navigateTo('dashboard')">На главную</button>
       </div>
     </div>
 
   </div>
 
-  <div class="profile-modal" id="prof-modal">
-    <div class="profile-card">
-      <h3 style="color:#f7d875; margin-bottom:16px; text-align:center;">Профиль ученика</h3>
-      <div class="profile-row"><span>UID Логин:</span><strong id="p-name">--</strong></div>
-      <div class="profile-row"><span>Биржа:</span><strong id="p-ex">--</strong></div>
-      <div class="profile-row"><span>Прогресс:</span><strong id="p-prog">--</strong></div>
-      <button class="btn-action" style="margin-top:20px; padding:12px;" onclick="toggleProfile(false)">Закрыть</button>
+  <!-- Profile Menu Modal -->
+  <div class="modal-overlay" id="profile-modal" style="display:none;" onclick="toggleProfileMenu()">
+    <div class="modal-card text-center" onclick="event.stopPropagation()">
+      <div class="user-avatar" style="width:60px;height:60px;font-size:1.5rem;margin:0 auto;" id="prof-avatar">U</div>
+      <h3 id="prof-name" style="margin-top:8px;">Пользователь</h3>
+      <span class="level-badge" id="prof-level">Новичок</span>
+      <div style="display:flex; justify-content:space-around; margin:16px 0;">
+        <div><strong id="prof-streak">0</strong><br><small>Дней</small></div>
+        <div><strong id="prof-lessons">0</strong><br><small>Уроков</small></div>
+        <div><strong id="prof-score">0%</strong><br><small>Рейтинг</small></div>
+      </div>
+      <p style="font-size:0.75rem; color:var(--text-secondary);">Device ID: <span id="prof-device">--</span></p>
+      <button class="btn-action mt-8" onclick="toggleProfileMenu()">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Logout Confirm Modal -->
+  <div class="modal-overlay" id="logout-modal" style="display:none;">
+    <div class="modal-card text-center">
+      <i class="fas fa-sign-out-alt" style="font-size:3rem; color:var(--danger);"></i>
+      <h3>Подтвердите выход</h3>
+      <p style="color:var(--text-secondary); margin:12px 0;">Вы уверены, что хотите выйти из аккаунта?</p>
+      <div style="display:flex; gap:12px;">
+        <button class="btn-action btn-secondary" style="flex:1;" onclick="document.getElementById('logout-modal').style.display='none'">Отмена</button>
+        <button class="btn-action" style="flex:1; background:var(--danger);" onclick="logout()">Выйти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Modal -->
+  <div class="modal-overlay" id="notif-modal" style="display:none;">
+    <div class="modal-card">
+      <h3>📬 Центр уведомлений</h3>
+      <div id="notif-list"><p style="color:var(--text-secondary);">Нет новых уведомлений</p></div>
+      <button class="btn-action mt-16" onclick="document.getElementById('notif-modal').style.display='none'">Закрыть</button>
     </div>
   </div>
 
   <script>
-    // === КОНФИГУРАЦИЯ FIREBASE ДЛЯ СВЯЗИ С АДМИНКОЙ ===
+    // ==================== КОНФИГУРАЦИЯ ====================
     const firebaseConfig = {
       apiKey: "AIzaSyAfQXJ4uB-WUpJh1HUnziV3B3ZpIeF4TQ8",
       authDomain: "p2p-alo.firebaseapp.com",
@@ -189,328 +589,821 @@
       messagingSenderId: "107684292554",
       appId: "1:107684292554:web:64564454cec199eb819133"
     };
-    
-    // Инициализация базы данных
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const database = firebase.database();
 
+    let database = null;
+    let firebaseAvailable = false;
     let currentUser = "";
     let myDeviceUID = "";
-    let currentSetupIndex = 0;
-    let isPracticeMode = false; 
-    let currentAcademyIndex = 0;
-    let forceReadTheoryMode = false;
-    let userData = { exchange: '' };
+    let userData = { 
+      exchange: '', level: 'Новичок', streak: 0, lessonsDone: 0, 
+      examScore: 0, protectionLevel: 'Базовая'
+    };
+    let allLessons = [];
+    let currentAcademyTab = 'theory';
 
-    // Генерация отпечатков девайса (HWID)
-    function initDeviceFingerprint() {
+    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+    function initApp() {
       let token = localStorage.getItem('p2p_device_token');
-      if(!token) {
-        token = 'HWID-' + Math.random().toString(36).substring(2, 15).toUpperCase();
+      if (!token) {
+        token = 'HWID-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('p2p_device_token', token);
       }
       myDeviceUID = token;
-    }
-    initDeviceFingerprint();
 
-    // БЛОК ТЕХНИЧЕСКИХ ШАГОВ
-    const setupSteps = [
-      { title: "1. Пароли безопасности", desc: "<p>Задайте сложный пароль в настройках криптобиржи. Включите Face ID.</p>", icon: "fa-key" },
-      { title: "2. Google Authenticator", desc: "<p>Привяжите 2FA-ключ к Google Authenticator для подтверждения выводов денег.</p>", icon: "fa-shield-alt" },
-      { title: "3. Верификация KYC", desc: "<p>Загрузите документы для прохождения базовой верификации на бирже.</p>", icon: "fa-passport" }
-    ];
-
-    // БОЛЬШАЯ БАЗА ВОПРОСОВ (60 ШТУК)
-    const academyLessons = [
-      {
-        badge: "База с нуля",
-        title: "1. Вход в P2P-раздел: Куда нажимать?",
-        text: "<p>На главном экране нажмите <strong>«P2P-торговля»</strong>. Без этого вы попадете на спотовый рынок, где рубли с карты не принимают.</p>",
-        question: "Где на бирже находится интерфейс для обмена рублей с карты на крипту?",
-        options: [{text: "Во вкладке 'P2P-торговля'", isCorrect: true}, {text: "На вкладке 'Фьючерсы'", isCorrect: false}, {text: "В стакане спотового рынка пары BTC/USDT", isCorrect: false}],
-        hint: "Раздел P2P — это ваш основной рабочий стол."
-      },
-      {
-        badge: "База с нуля",
-        title: "2. Покупка USDT: Фильтры",
-        text: "<p>Используйте кнопку <strong>«Фильтр»</strong>. Укажите сумму и ваш банк, чтобы отсечь неподходящие ордера.</p>",
-        question: "Зачем использовать кнопку 'Фильтр' перед поиском мерчанта?",
-        options: [{text: "Чтобы отсортировать объявления по своему банку и сумме", isCorrect: true}, {text: "Чтобы биржа снизила курс", isCorrect: false}, {text: "Для изменения валюты аккаунта", isCorrect: false}],
-        hint: "Фильтры экономят время и защищают от блокировок."
-      },
-      {
-        badge: "База с нуля",
-        title: "3. Как открыть ордер на Покупку",
-        text: "<p>Нажмите зеленую кнопку <strong>«Купить»</strong>. С этого момента биржа замораживает USDT продавца на эскроу-счете.</p>",
-        question: "Что происходит с криптовалютой продавца сразу после открытия ордера?",
-        options: [{text: "Она блокируется биржей на безопасном счете", isCorrect: true}, {text: "Она сразу падает на ваш кошелек", isCorrect: false}, {text: "Она списывается как комиссия системы", isCorrect: false}],
-        hint: "Эскроу-счет защищает сделку."
+      // Инициализация Firebase с защитой от ошибок
+      try {
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        if (typeof firebase !== 'undefined') {
+          database = firebase.database();
+          firebaseAvailable = true;
+          console.log('✅ Firebase подключен');
+        }
+      } catch (e) {
+        console.warn('⚠️ Firebase недоступен, работаем в локальном режиме');
+        firebaseAvailable = false;
+        database = null;
       }
-    ];
 
-    // Авто-генерация оставшихся вопросов до 60
-    const шаблоныБезопасности = [
-      { t: "Риски карт третьих лиц", q: "Пришел перевод от чужого имени (ФИО карты не бьет с биржей). Ваши действия?", o1: "Не отпускать крипту, открыть апелляцию", o2: "Сразу выпустить монеты", o3: "Отправить рубли обратно без предупреждения" },
-      { t: "Мошенничество через чек", q: "Покупатель скинул скриншот чека в чат, но баланс карты пуст. Ваши действия?", o1: "Ждать отображения денег в банке, чек игнорировать", o2: "Верить чеку и отпускать монеты", o3: "Подать жалобу на банк" },
-      { t: "Схемы типа 'Треугольник'", q: "В чем суть мошеннической схемы Треугольник на P2P?", o1: "Мошенник выступает посредником, обманывая жертву на фиат и вас на крипту", o2: "Это законный метод арбитража между 3 биржами", o3: "Сбой платежного шлюза СБП" }
-    ];
+      generateLessons();
 
-    for(let i = 4; i <= 60; i++) {
-      let tpl = шаблоныБезопасности[i % шаблоныБезопасности.length];
-      academyLessons.push({
-        badge: `Безопасность. Модуль ${i}`,
-        title: `${i}. ${tpl.t}`,
-        text: `<p>Изучите защитный алгоритм #${i}. Нарушение правил регламента ведет к безвозвратной заморозке банковских счетов финмониторингом.</p>`,
-        question: tpl.q,
-        options: [
-          {text: tpl.o1, isCorrect: true},
-          {text: tpl.o2, isCorrect: false},
-          {text: tpl.o3, isCorrect: false}
-        ],
-        hint: "Правила безопасности написаны потерянными депозитами."
+      const splashScreen = document.getElementById('splash-screen');
+      const headerMain = document.getElementById('header-main');
+      const bottomNav = document.getElementById('bottom-nav');
+
+      // ГАРАНТИРОВАННО СКРЫВАЕМ СПЛЕШ-СКРИН
+      setTimeout(() => {
+        if (splashScreen) {
+          splashScreen.classList.add('hidden');
+        }
+        if (headerMain) headerMain.style.display = 'flex';
+        if (bottomNav) bottomNav.style.display = 'flex';
+        
+        loadSavedUserData();
+        
+        if (localStorage.getItem('p2p_theme') === 'light') {
+          document.body.classList.add('light-theme');
+          const tt = document.getElementById('theme-toggle');
+          if (tt) tt.classList.remove('active');
+        }
+        
+        // Если пользователь не авторизован, показываем экран логина
+        if (!currentUser) {
+          switchScreen('scr-login');
+        }
+        
+        showOnboardingHint();
+      }, 2500);
+
+      setupOnlineStatus();
+      if (localStorage.getItem('p2p_theme') === 'light') document.body.classList.add('light-theme');
+      updateCalendarWidget();
+    }
+
+    function generateLessons() {
+      allLessons = [
+        {
+          badge: "База с нуля",
+          title: "1. Вход в P2P-раздел: Куда нажимать?",
+          text: `<h4>📍 Где находится P2P-раздел?</h4>
+            <p>На главном экране биржи (Binance, Bybit, Huobi и др.) нажмите вкладку <strong>«P2P-торговля»</strong> или «P2P». Обычно она расположена в верхнем меню или в боковой панели.</p>
+            <h4>❌ Типичные ошибки новичков:</h4>
+            <ul><li>Заходят в «Спотовый рынок» и пытаются там найти P2P — его там нет.</li>
+            <li>Нажимают «Фьючерсы» — это маржинальная торговля с плечами, высокий риск.</li>
+            <li>Путают P2P с «Конвертацией» — там другие курсы и нет защиты эскроу.</li></ul>
+            <h4>✅ Правильный путь:</h4>
+            <p>Главная → Кошелёк → P2P (или сразу P2P-торговля в шапке). Убедитесь, что вы в правильном разделе — там отображаются объявления от реальных продавцов и покупателей.</p>`,
+          question: "Где находится интерфейс для P2P-обмена?",
+          options: [
+            {text:"Вкладка 'P2P-торговля'", correct:true},
+            {text:"Спотовый рынок BTC/USDT", correct:false},
+            {text:"Раздел 'Фьючерсы'", correct:false}
+          ],
+          hint:"P2P-раздел — ваш основной рабочий стол. Все сделки идут только через него."
+        },
+        {
+          badge: "База с нуля",
+          title: "2. Покупка USDT: Фильтры и сумма",
+          text: `<h4>🔍 Зачем нужны фильтры?</h4>
+            <p>Кнопка <strong>«Фильтр»</strong> позволяет отсортировать объявления по параметрам: банк, сумма, регион. Без фильтра вы увидите сотни объявлений, включая не подходящие под ваш банк.</p>
+            <h4>⚙️ Как настроить:</h4>
+            <ol><li>Нажмите «Фильтр» в разделе P2P.</li><li>Выберите ваш банк из списка (Сбер, Тинькофф, Райффайзен и т.д.).</li><li>Укажите сумму в USDT, которую хотите купить.</li><li>Нажмите «Применить» — останутся только подходящие продавцы.</li></ol>
+            <h4>⚠️ Почему это важно:</h4>
+            <p>Если не указать банк, вы можете случайно открыть ордер у продавца, который не принимает ваш банк. Сделку придётся отменять, а вам могут начислить штраф за срыв.</p>`,
+          question: "Зачем использовать кнопку 'Фильтр' при покупке USDT?",
+          options: [
+            {text:"Отсортировать объявления по банку и сумме", correct:true},
+            {text:"Чтобы биржа снизила курс криптовалюты", correct:false},
+            {text:"Для изменения валюты аккаунта", correct:false}
+          ],
+          hint:"Фильтры экономят время и защищают от случайного открытия неподходящего ордера."
+        },
+        {
+          badge: "База с нуля",
+          title: "3. Как открыть ордер на Покупку",
+          text: `<h4>🟢 Кнопка «Купить»</h4>
+            <p>Нажмите зелёную кнопку <strong>«Купить»</strong> рядом с объявлением продавца. После этого крипта продавца (USDT) <strong>замораживается биржей на эскроу-счете</strong>.</p>
+            <h4>🔒 Что такое эскроу?</h4>
+            <p>Это специальный счёт биржи, где крипта заблокирована до выполнения условий сделки. Продавец не может её забрать, пока вы не подтвердите перевод денег.</p>
+            <h4>⏱️ Таймер сделки:</h4>
+            <p>После открытия ордера запускается таймер (обычно 15–30 минут). За это время вы должны перевести деньги продавцу. Если не успеете — ордер отменится, а вы можете получить штраф.</p>
+            <h4>📱 Процесс по шагам:</h4>
+            <ol><li>Нажали «Купить».</li><li>Увидели реквизиты продавца.</li><li>Перевели деньги через приложение банка.</li><li>Нажали «Я оплатил» на бирже.</li><li>Продавец подтверждает получение — крипта размораживается и падает на ваш кошелёк.</li></ol>`,
+          question: "Что происходит с криптой продавца после открытия ордера на покупку?",
+          options: [
+            {text:"Блокируется биржей на эскроу-счете", correct:true},
+            {text:"Сразу падает на ваш кошелёк", correct:false},
+            {text:"Списывается как комиссия биржи", correct:false}
+          ],
+          hint:"Эскроу-счет — это гарант безопасности. Крипта никуда не уйдёт, пока сделка не завершена."
+        },
+        {
+          badge: "Безопасность. Модуль 4",
+          title: "4. Схема «Треугольник»: полный разбор",
+          text: `<h4>🔺 Что такое схема «Треугольник»?</h4>
+            <p>Это одна из самых опасных мошеннических схем в P2P. Мошенник выступает посредником между двумя жертвами, обманывая обе стороны. Схема работает по принципу «перевода стрелок».</p>
+            <h4>👥 Участники схемы:</h4>
+            <ul><li><strong>Мошенник (Посредник)</strong> — организатор, который сводит двух жертв.</li>
+            <li><strong>Жертва А (Покупатель)</strong> — хочет купить USDT, переводит деньги.</li>
+            <li><strong>Жертва Б (Продавец)</strong> — продаёт USDT, получает деньги от незнакомого человека.</li></ul>
+            <h4>🔄 Как работает схема:</h4>
+            <ol><li>Мошенник находит две сделки на бирже: одну на покупку, одну на продажу.</li>
+            <li>Он говорит Покупателю: «Переведите деньги на вот этот счёт» (даёт реквизиты Продавца).</li>
+            <li>Он говорит Продавцу: «Сейчас придёт оплата от моего друга, после этого отпустите USDT» (даёт реквизиты Покупателя).</li>
+            <li>Покупатель переводит деньги Продавцу. Продавец видит поступление, думает, что это от Покупателя, и отпускает USDT.</li>
+            <li>USDT уходит на кошелёк Мошенника. Покупатель остаётся без денег и без крипты, Продавец — без денег и без крипты.</li></ol>
+            <h4>💀 Как трейдер может попасться:</h4>
+            <ul><li>Принял оплату от незнакомого третьего лица (имя отправителя не совпадает с ником на бирже).</li><li>Не проверил, что имя плательщика совпадает с верифицированным именем контрагента на бирже.</li><li>Согласился на сделку вне биржи или в обход правил.</li></ul>
+            <h4>🛡️ Защита:</h4>
+            <ul><li>Всегда сверяйте имя отправителя в банке с именем пользователя на бирже.</li><li>Никогда не принимайте оплату от третьих лиц.</li><li>Если имя не совпадает — сразу открывайте апелляцию.</li></ul>`,
+          question: "В чём суть мошеннической схемы «Треугольник»?",
+          options: [
+            {text:"Мошенник выступает посредником, обманывая и покупателя, и продавца", correct:true},
+            {text:"Законный метод арбитража с участием трёх бирж", correct:false},
+            {text:"Сбой платёжного шлюза СБП при переводе", correct:false}
+          ],
+          hint:"Треугольник — это когда мошенник получает USDT, а две жертвы спорят друг с другом."
+        },
+        {
+          badge: "Безопасность. Модуль 5",
+          title: "5. Риски карт третьих лиц: перевод от чужого имени",
+          text: `<h4>💳 В чём опасность?</h4>
+            <p>Вы выставили объявление на продажу USDT. Вам приходит оплата, но имя отправителя в банке <strong>не совпадает</strong> с ником пользователя на бирже. Это красный флаг.</p>
+            <h4>🎭 Сценарий мошенничества:</h4>
+            <ol><li>Мошенник создаёт сделку с вами на покупку USDT.</li><li>Он даёт ваши реквизиты другой жертве (например, в другой сделке или в соцсетях).</li><li>Жертва переводит вам деньги.</li><li>Вы видите поступление от «Иван Петров», а на бирже ник «Trader_X».</li><li>Если вы отпустите USDT — мошенник получит крипту, а жертва подаст на вас в полицию за неосновательное обогащение.</li></ol>
+            <h4>⚖️ Последствия для трейдера:</h4>
+            <ul><li>Банк может заблокировать ваш счёт по 115-ФЗ (подозрение на отмывание).</li><li>Жертва может написать заявление в полицию, вас вызовут на допрос.</li><li>Биржа заморозит ваш аккаунт до выяснения обстоятельств.</li></ul>
+            <h4>🛡️ Алгоритм защиты:</h4>
+            <ol><li>Получили оплату — сверьте ФИО отправителя с верифицированным именем на бирже.</li><li>Не совпадает — не отпускайте крипту, откройте апелляцию.</li><li>Сделайте скриншоты переписки и данных транзакции.</li><li>Дождитесь решения саппорта биржи.</li></ol>`,
+          question: "Пришёл перевод от чужого имени, не совпадающего с ником на бирже. Ваши действия?",
+          options: [
+            {text:"Открыть апелляцию, не отпускать крипту", correct:true},
+            {text:"Сразу отпустить USDT, раз деньги пришли", correct:false},
+            {text:"Отправить деньги обратно отправителю", correct:false}
+          ],
+          hint:"Чужое имя — это почти всегда мошенничество. Не отпускайте крипту."
+        },
+        {
+          badge: "Безопасность. Модуль 6",
+          title: "6. Мошенничество через чек / скриншот",
+          text: `<h4>🖼️ Что это за схема?</h4>
+            <p>Покупатель отправляет вам скриншот (чек) о якобы совершённом переводе, но реальных денег на вашем счету нет. Скриншот подделан в фотошопе, либо перевод был отменён.</p>
+            <h4>🔧 Техническая сторона:</h4>
+            <ul><li>Подделка скриншота: меняются цифры, дата, сумма в графическом редакторе.</li><li>Отложенный платёж: создаётся платёжное поручение, но оно не исполняется банком.</li><li>Чек из другого банка: вам показывают скриншот перевода из банка, где у мошенника нулевой баланс.</li></ul>
+            <h4>🧠 Психология:</h4>
+            <p>Мошенник давит на скорость: «Я перевёл, отпускайте быстрее, мне срочно!» Начинает угрожать апелляцией, писать в саппорт. Цель — заставить вас отпустить крипту ДО реального зачисления денег.</p>
+            <h4>✅ Единственно правильное действие:</h4>
+            <p>Откройте приложение банка и проверьте <strong>фактическое поступление денег на счёт</strong>. Не верьте скриншотам, не верьте СМС (их тоже подделывают). Только баланс в приложении банка.</p>`,
+          question: "Покупатель скинул скриншот чека, но баланс в банке пуст. Ваши действия?",
+          options: [
+            {text:"Ждать реального зачисления денег в банке", correct:true},
+            {text:"Верить чеку и отпускать USDT", correct:false},
+            {text:"Подать жалобу на банк за задержку", correct:false}
+          ],
+          hint:"Скриншот — не доказательство. Только фактический баланс в приложении банка."
+        }
+      ];
+
+      const extendedLessons = [
+        {
+          badge: "Безопасность. Модуль 7",
+          title: "7. Схема «Двойной перевод» (Double Spend)",
+          text: `<h4>💰 Что это?</h4><p>Мошенник убеждает продавца, что перевёл деньги дважды по ошибке, и просит вернуть «лишнее». На деле был только один перевод, а после возврата мошенник ещё и открывает апелляцию на бирже, заявляя, что не получил USDT.</p><h4>🔄 Механика:</h4><ol><li>Мошенник переводит точную сумму за USDT.</li><li>Продавец отпускает крипту.</li><li>Мошенник пишет в личку: «Я случайно перевёл дважды, верните второй перевод на карту».</li><li>Продавец переводит деньги.</li><li>Мошенник открывает апелляцию: «Я перевёл деньги, а USDT не получил» (умалчивая о возврате).</li></ol><h4>🛡️ Защита:</h4><p>Никогда не возвращайте деньги вне биржи. Все спорные ситуации — только через апелляцию.</p>`,
+          question: "Покупатель утверждает, что перевёл деньги дважды, и просит вернуть лишнее на карту. Ваши действия?",
+          options: [
+            {text:"Не возвращать, открыть апелляцию на бирже", correct:true},
+            {text:"Вернуть деньги на карту, раз просит", correct:false},
+            {text:"Отпустить USDT и закрыть сделку", correct:false}
+          ],
+          hint:"Любой возврат вне биржи — потеря ваших денег. Решайте вопросы только через саппорт."
+        },
+        {
+          badge: "Безопасность. Модуль 8",
+          title: "8. Фишинг через поддельные ссылки на биржу",
+          text: `<h4>🎣 Как это работает?</h4><p>Мошенник присылает ссылку на «зеркало биржи» или «страницу сделки». Ссылка ведёт на фишинговый сайт, который выглядит точь-в-точь как настоящая биржа. Вы вводите логин и пароль — они уходят мошеннику.</p><h4>🔍 Как распознать:</h4><ul><li>Адрес сайта отличается на одну букву: binance.co вместо binance.com, или byblt.com вместо bybit.com.</li><li>Сайт не показывает ваш баланс или историю сделок (подставная страница).</li><li>Сертификат SSL отсутствует или выдан на другое имя.</li></ul><h4>🛡️ Защита:</h4><ul><li>Никогда не переходите по ссылкам из непроверенных источников.</li><li>Добавьте биржу в закладки и заходите только через закладку.</li><li>Включите двухфакторную аутентификацию (2FA).</li></ul>`,
+          question: "Вам прислали ссылку на «страницу сделки», адрес похож на биржу, но отличается на одну букву. Что делать?",
+          options: [
+            {text:"Не переходить, зайти через официальное приложение", correct:true},
+            {text:"Перейти и проверить, похожа ли страница", correct:false},
+            {text:"Ввести логин и пароль для проверки", correct:false}
+          ],
+          hint:"Фишинг — самая частая причина взлома аккаунтов. Проверяйте адресную строку."
+        }
+      ];
+
+      allLessons = [...allLessons, ...extendedLessons];
+
+      const schemes = [
+        { name: "Схема «СМС-подтверждение»", text: `<h4>📱 В чём суть?</h4><p>Мошенник просит вас назвать код из СМС, якобы для подтверждения сделки. На самом деле он пытается войти в ваш аккаунт или подтвердить перевод с вашей карты.</p><h4>💀 Риск:</h4><p>Полная потеря доступа к аккаунту биржи или списание денег с банковской карты.</p>` },
+        { name: "Схема «Подставной гарант»", text: `<h4>🛡️ Что предлагают?</h4><p>Мошенник предлагает провести сделку через «надёжного гаранта» в телеграме или Discord. Этот «гарант» — сообщник мошенника. Вы переводите деньги «гаранту» — и теряете их навсегда.</p><h4>✅ Правило:</h4><p>Единственный гарант в P2P — это эскроу-счёт биржи. Никаких сторонних гарантов не существует.</p>` },
+        { name: "Схема «Ошибочный перевод»", text: `<h4>💸 Сценарий:</h4><p>Вам на карту приходят деньги от незнакомца. Затем он пишет: «Извините, ошибся номером, верните деньги на другую карту». Вы возвращаете — а потом он подаёт на вас в суд за неосновательное обогащение И требует возврата от банка. Вы теряете деньги дважды.</p><h4>🛡️ Защита:</h4><p>Не возвращайте деньги самостоятельно. Пусть отправитель решает вопрос через свой банк.</p>` },
+        { name: "Схема «Подмена реквизитов»", text: `<h4>🔄 Как работает?</h4><p>Мошенник в последний момент перед сделкой пишет: «Ой, та карта заблокирована, переведите на эту». И даёт свои реквизиты. Вы переводите — и теряете деньги, потому что на бирже зафиксированы старые реквизиты.</p><h4>🛡️ Защита:</h4><p>Всегда переводите ТОЛЬКО на реквизиты, указанные в ордере на бирже. Смена реквизитов — только через отмену и создание нового ордера.</p>` },
+        { name: "Схема «Зеркальная сделка»", text: `<h4>🪞 Описание:</h4><p>Мошенник одновременно открывает сделку с вами (на покупку) и с другим продавцом (на продажу) по одинаковому курсу. Он даёт вам реквизиты того продавца. Вы переводите деньги продавцу, продавец отпускает USDT мошеннику. Вы остаётесь без USDT, продавец под ударом.</p>` },
+        { name: "Схема «Ложный перевод через СБП»", text: `<h4>🏦 СБП (Система Быстрых Платежей):</h4><p>Мошенник создаёт поддельное уведомление о переводе через СБП. В приложении банка создаётся «шаблон» перевода, но он не исполняется. Вам показывают скриншот, что перевод «в обработке». На деле денег нет.</p><h4>🛡️ Защита:</h4><p>СБП-переводы проходят мгновенно. Нет статуса «в обработке» — есть только «исполнено» или «отклонено». Проверяйте баланс.</p>` },
+        { name: "Схема «Взломанный аккаунт»", text: `<h4>🔓 Признаки:</h4><p>Аккаунт с хорошей историей вдруг начинает вести себя странно: меняет реквизиты, торгует по нерыночному курсу, торопит. Скорее всего, аккаунт взломан.</p><h4>🛡️ Защита:</h4><p>Проверяйте дату регистрации, историю сделок. Если аккаунт «молчит» полгода и вдруг активизировался — это подозрительно.</p>` },
+        { name: "Схема «Давление через саппорт»", text: `<h4>🎭 Сценарий:</h4><p>Мошенник угрожает: «Я написал в саппорт, вас заблокируют». Он давит на страх блокировки, чтобы вы отпустили USDT без проверки. На деле саппорт биржи разбирается объективно, блокировка просто так не происходит.</p><h4>🛡️ Защита:</h4><p>Не поддавайтесь на давление. Саппорт рассматривает доказательства, а не эмоции.</p>` },
+        { name: "Схема «Фальшивый чат саппорта»", text: `<h4>💬 Как выглядит:</h4><p>Мошенник добавляет вас в группу в телеграме, где якобы сидит «саппорт биржи» и «разбирает сделку». Все участники — подставные. Вас склоняют отпустить USDT или перевести деньги.</p>` },
+        { name: "Схема «Подмена IP / Геолокация»", text: `<h4>🌍 Зачем это?</h4><p>Мошенник использует VPN, чтобы скрыть свою страну. Биржа может заморозить сделку, если геолокации покупателя и продавца не совпадают с ожидаемыми. Мошенник может обвинить вас во взломе.</p>` }
+      ];
+
+      for (let i = 9; i <= 60; i++) {
+        const scheme = schemes[(i - 9) % schemes.length];
+        const variationIndex = Math.floor((i - 9) / schemes.length);
+        let fullText = scheme.text;
+        if (variationIndex > 0) {
+          fullText += `<h4>📚 Дополнительный материал (вариация ${variationIndex + 1}):</h4>
+            <p>Данная схема может видоизменяться. Мошенники постоянно адаптируют методы, используя новые технологии и предлоги. 
+            Ключевое правило неизменно: проверяйте каждый шаг сделки, сверяйте реквизиты и имена, 
+            не поддавайтесь на давление и спешку. Все вопросы решайте ТОЛЬКО через официальный саппорт биржи.</p>
+            <div class="danger-zone"><p><strong>⚠️ Важно:</strong> Одна ошибка в P2P может стоить вам всех средств на карте и блокировки банковского счёта по 115-ФЗ. Банки передают информацию в Росфинмониторинг. Последствия — потеря доступа к банковской системе на годы.</p></div>`;
+        }
+        allLessons.push({
+          badge: `Безопасность. Модуль ${i}`,
+          title: `${i}. ${scheme.name} (вариация ${variationIndex + 1})`,
+          text: fullText,
+          question: `Какова суть схемы «${scheme.name}» и как от неё защититься?`,
+          options: [
+            {text: "Проверять все реквизиты через биржу и не доверять сторонним гарантам", correct: true},
+            {text: "Доверять продавцу, если у него высокий рейтинг", correct: false},
+            {text: "Использовать сторонние сервисы для ускорения сделок", correct: false}
+          ],
+          hint: "Любая схема направлена на то, чтобы вы отдали деньги или крипту, минуя защиту биржи. Не делайте этого."
+        });
+      }
+
+      allLessons.forEach((lesson, index) => {
+        if (index >= 8 && index % 3 === 0) {
+          const schemes2 = ['Подмена реквизитов', 'Ложный саппорт', 'Чарджбэк', 'Фишинг', 'Двойной перевод'];
+          const s = schemes2[index % schemes2.length];
+          lesson.question = `Вы столкнулись со схемой «${s}». Какое действие будет ПРАВИЛЬНЫМ?`;
+          lesson.options = [
+            {text: "Следовать правилам безопасности: проверять реквизиты, не спешить, использовать саппорт биржи", correct: true},
+            {text: "Довериться продавцу и выполнить его инструкции", correct: false},
+            {text: "Игнорировать подозрения, если сделка мелкая", correct: false}
+          ];
+        }
       });
     }
 
-    // Рандомизатор массивов
-    function shuffle(array) {
-      let arr = [...array];
-      for (let i = arr.length - 1; i > 0; i--) {
+    function shuffleArray(arr) {
+      const shuffled = [...arr];
+      for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
-      return arr;
+      return shuffled;
     }
 
-    // === ИСПРАВЛЕННАЯ ЛОГИКА АВТОРИЗАЦИИ С УЧЕТОМ АДМИНКИ ===
-    function handleLogin() {
-      const u = document.getElementById('log-username').value.trim().toLowerCase();
-      const p = document.getElementById('log-password').value.trim();
+    function setupOnlineStatus() {
+      const updateStatus = () => {
+        const isOnline = navigator.onLine;
+        const banner = document.getElementById('offline-banner');
+        if (banner) banner.classList.toggle('show', !isOnline);
+        const statusEl = document.getElementById('sync-status');
+        if (statusEl) {
+          statusEl.innerHTML = isOnline ? '⚡ Онлайн' : '📡 Оффлайн';
+          statusEl.style.color = isOnline ? 'var(--success)' : 'var(--danger)';
+        }
+      };
+      window.addEventListener('online', () => { updateStatus(); showToast('✅ Соединение восстановлено', 'success'); });
+      window.addEventListener('offline', () => { updateStatus(); showToast('❌ Нет подключения к интернету', 'error'); });
+      updateStatus();
+    }
 
-      if (!u || !p) {
-        alert("Пожалуйста, заполните все поля ввода!");
+    function loadSavedUserData() {
+      const saved = localStorage.getItem('p2p_userdata');
+      if (saved) {
+        try { userData = { ...userData, ...JSON.parse(saved) }; } catch(e) {}
+      }
+      updateAllUI();
+    }
+
+    function saveUserData() {
+      localStorage.setItem('p2p_userdata', JSON.stringify(userData));
+      updateAllUI();
+    }
+
+    function updateAllUI() {
+      const els = {
+        'streak-count': userData.streak || 0,
+        'user-level': userData.level || 'Новичок',
+        'dash-lessons-done': `${userData.lessonsDone || 0}/60 уроков`,
+        'dash-pct': `${Math.round((userData.lessonsDone || 0) / 60 * 100)}%`,
+        'dash-protection': userData.protectionLevel || 'Базовая',
+        'prof-streak': userData.streak || 0,
+        'prof-lessons': userData.lessonsDone || 0,
+        'prof-score': `${Math.round((userData.lessonsDone || 0) / 60 * 100)}%`,
+        'prof-level': userData.level || 'Новичок',
+        'prof-name': currentUser || 'Не авторизован',
+        'prof-device': myDeviceUID ? myDeviceUID.substring(0, 12) + '...' : '--',
+        'continue-text': userData.lessonsDone >= 60 ? '🎓 Курс полностью пройден!' : `Пройдено ${userData.lessonsDone || 0} из 60 уроков`,
+        'dash-exam-status': userData.lessonsDone >= 60 ? '✅ Пройден' : 'В процессе',
+        'cert-name': currentUser || 'Студент',
+        'cert-date': new Date().toLocaleDateString('ru-RU'),
+        'cert-level': userData.level || 'Эксперт'
+      };
+      Object.entries(els).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+      });
+      const initial = currentUser ? currentUser[0].toUpperCase() : 'U';
+      ['avatar-initial', 'prof-avatar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = initial;
+      });
+      const circle = document.getElementById('dash-circle');
+      if (circle) {
+        const progress = (userData.lessonsDone || 0) / 60;
+        circle.style.strokeDashoffset = 213.6 - (213.6 * progress);
+      }
+      const lessonsDone = userData.lessonsDone || 0;
+      if (lessonsDone >= 60) userData.protectionLevel = 'Максимальная 🛡️';
+      else if (lessonsDone >= 30) userData.protectionLevel = 'Высокая 🔒';
+      else if (lessonsDone >= 10) userData.protectionLevel = 'Средняя 🔐';
+      else userData.protectionLevel = 'Базовая 🔑';
+      const protEl = document.getElementById('dash-protection');
+      if (protEl) protEl.innerText = userData.protectionLevel;
+      updateAchievements();
+      updateCalendarWidget();
+    }
+
+    function updateAchievements() {
+      const block = document.getElementById('dash-achievements');
+      if (!block) return;
+      const achievements = [
+        { icon: '🔥', name: '3 дня подряд', earned: (userData.streak || 0) >= 3 },
+        { icon: '📚', name: '10 уроков', earned: (userData.lessonsDone || 0) >= 10 },
+        { icon: '💡', name: 'Экзамен сдан', earned: (userData.lessonsDone || 0) >= 60 },
+        { icon: '⭐', name: 'Эксперт', earned: userData.level === 'Эксперт' }
+      ];
+      block.innerHTML = achievements.map(a => 
+        `<div style="text-align:center; transition: all 0.3s ease; 
+              opacity:${a.earned ? 1 : 0.3}; filter:${a.earned ? 'none' : 'grayscale(1)'};">
+          <div style="font-size:2rem;">${a.icon}</div>
+          <small style="color:var(--text-secondary);">${a.name}</small>
+          ${a.earned ? '<div style="color:var(--success);font-size:0.6rem;">✅</div>' : ''}
+        </div>`
+      ).join('');
+    }
+
+    function updateCalendarWidget() {
+      const widget = document.getElementById('calendar-widget');
+      if (!widget) return;
+      const days = [];
+      const today = new Date();
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const isActive = checkDayActive(dateStr);
+        days.push({ date: d.getDate(), month: d.getMonth() + 1, active: isActive, dateStr });
+      }
+      widget.innerHTML = days.map(d => `
+        <div style="text-align:center; width:20px; font-size:0.65rem;
+                    background:${d.active ? 'var(--gold)' : 'rgba(255,255,255,0.04)'};
+                    border-radius:4px; padding:2px; color:${d.active ? '#000' : 'var(--text-secondary)'};"
+             title="${d.dateStr}">${d.date}</div>
+      `).join('');
+    }
+
+    function checkDayActive(dateStr) {
+      const history = JSON.parse(localStorage.getItem('p2p_activity_history') || '{}');
+      return !!history[dateStr];
+    }
+
+    function recordActivity() {
+      const today = new Date().toISOString().split('T')[0];
+      const history = JSON.parse(localStorage.getItem('p2p_activity_history') || '{}');
+      if (!history[today]) {
+        history[today] = true;
+        localStorage.setItem('p2p_activity_history', JSON.stringify(history));
+        updateStreak();
+      }
+    }
+
+    function updateStreak() {
+      const history = JSON.parse(localStorage.getItem('p2p_activity_history') || '{}');
+      const dates = Object.keys(history).sort().reverse();
+      let streak = 0;
+      const today = new Date();
+      for (let i = 0; i < dates.length; i++) {
+        const checkDate = new Date(dates[i]);
+        const expectedDate = new Date(today);
+        expectedDate.setDate(expectedDate.getDate() - i);
+        if (checkDate.toISOString().split('T')[0] === expectedDate.toISOString().split('T')[0]) streak++;
+        else break;
+      }
+      userData.streak = streak;
+      saveUserData();
+    }
+
+    // ==================== НАВИГАЦИЯ ====================
+    function navigateTo(screenId) {
+      const map = { 'dashboard': 'scr-dashboard', 'academy': 'scr-academy', 'results': 'scr-results', 'settings': 'scr-settings' };
+      const scr = map[screenId] || screenId;
+      if (!currentUser && scr !== 'scr-login' && scr !== 'scr-settings') {
+        showToast('⚠️ Сначала войдите в систему', 'warning');
+        switchScreen('scr-login');
         return;
       }
-
-      // Проверяем пользователя в созданной админкой ветке system_access
-      database.ref('system_access/' + u).once('value').then((snapshot) => {
-        const cloudData = snapshot.val();
-        
-        if (cloudData) {
-          // 1. Проверка на блокировку администратором
-          if (cloudData.blocked === true) {
-            alert("❌ Ваш аккаунт заблокирован администратором системы.");
-            return;
-          }
-
-          // 2. Сверяем пароль
-          if (cloudData.password === p) {
-            currentUser = u;
-
-            // Записываем активную сессию со всеми данными для вкладки "Активность"
-            database.ref('active_sessions/' + u).set({
-              device_uid: myDeviceUID,
-              current_module: "Выбор биржи",
-              last_ping: Date.now()
-            }).then(() => {
-              startDeviceGuard();
-              switchScreen('scr-choose-exchange');
-              document.getElementById('header-tools').style.display = 'flex';
-            });
-          } else {
-            alert("❌ Неверный пароль доступа.");
-          }
-        } else {
-          alert("❌ Пользователь с таким логином не зарегистрирован.");
-        }
-      }).catch((err) => {
-        console.error("Ошибка Firebase:", err);
-        alert("Ошибка связи с сервером базы данных.");
-      });
-    }
-
-    // Автоматическая защита аккаунта (выбивает, если вошли с другого телефона или забанили)
-    function startDeviceGuard() {
-      setInterval(() => {
-        if (!currentUser) return;
-
-        // Проверяем статус бана в реальном времени
-        database.ref('system_access/' + currentUser + '/blocked').once('value').then((snap) => {
-          if (snap.val() === true) {
-            alert("❌ Доступ прекращен: Данный аккаунт был заблокирован администратором!");
-            logout();
-          }
-        });
-
-        // Проверяем HWID устройства
-        database.ref('active_sessions/' + currentUser + '/device_uid').once('value').then((snapshot) => {
-          let activeUID = snapshot.val();
-          if (activeUID && activeUID !== myDeviceUID) {
-            alert("❌ ВХОД ЗАБЛОКИРОВАН: Данный аккаунт запущен на другом устройстве!");
-            logout();
-          }
-        });
-      }, 2500);
-    }
-
-    // ОСТАЛЬНАЯ ЛОГИКА ИНТЕРФЕЙСА С ОПТИМИЗИРОВАННЫМИ ТЕСТАМИ
-    function selectExchange(ex) {
-      userData.exchange = ex;
-      currentSetupIndex = 0;
-      switchScreen('scr-setup-wizard');
-      renderSetupStep();
-    }
-
-    function renderSetupStep() {
-      let data = setupSteps[currentSetupIndex];
-      document.getElementById('setup-title').innerText = data.title;
-      document.getElementById('setup-desc').innerHTML = data.desc;
-      document.getElementById('setup-icon-box').innerHTML = `<i class="fas ${data.icon}"></i>`;
-    }
-
-    function nextSetupStep() {
-      currentSetupIndex++;
-      if(currentSetupIndex < setupSteps.length) {
-        renderSetupStep();
-      } else {
-        isPracticeMode = false;
-        forceReadTheoryMode = false;
-        currentAcademyIndex = 0;
-        switchScreen('scr-academy');
-        document.getElementById('global-progress').style.display = 'block';
-        renderAcademyScreen();
-      }
-    }
-
-    function renderAcademyScreen() {
-      let lesson = academyLessons[currentAcademyIndex];
-      let total = academyLessons.length;
-      let modeText = isPracticeMode ? (forceReadTheoryMode ? "Повторение" : "Экзаменационный Зачет") : "Теория";
-      
-      document.getElementById('lesson-counter-text').innerText = `${modeText}: Модуль ${currentAcademyIndex + 1} из ${total}`;
-      let pct = Math.round((currentAcademyIndex / total) * 100);
-      document.getElementById('lesson-percent-text').innerText = `${pct}%`;
-      document.getElementById('lesson-bar-fill').style.width = `${pct}%`;
-
-      document.getElementById('acad-badge').innerText = lesson.badge;
-      document.getElementById('acad-title').innerText = lesson.title;
-      document.getElementById('acad-text').innerHTML = lesson.text;
-
-      let quizBlock = document.getElementById('quiz-block-element');
-      let nextBtn = document.getElementById('acad-next-btn');
-
-      if (!isPracticeMode || (isPracticeMode && forceReadTheoryMode)) {
-        quizBlock.style.display = "none";
-        nextBtn.innerHTML = forceReadTheoryMode ? `Я понял ошибку, вернуться <i class="fas fa-undo"></i>` : `Изучил, далее <i class="fas fa-chevron-right"></i>`;
-        nextBtn.disabled = false;
-      } else {
-        quizBlock.style.display = "block";
-        document.getElementById('acad-question').innerText = lesson.question;
-        nextBtn.innerHTML = `Подтвердить выбор <i class="fas fa-lock"></i>`;
-        nextBtn.disabled = true;
-
-        let optionsWrapper = document.getElementById('acad-options');
-        optionsWrapper.innerHTML = '';
-        document.getElementById('acad-feedback').style.display = 'none';
-
-        let randomizedOptions = shuffle(lesson.options);
-
-        randomizedOptions.forEach(opt => {
-          let btn = document.createElement('button');
-          btn.className = 'option-btn';
-          btn.innerHTML = `<i class="far fa-circle"></i> ${opt.text}`;
-          btn.onclick = () => selectPracticeOption(btn, opt.isCorrect, lesson.hint);
-          optionsWrapper.appendChild(btn);
-        });
-      }
-
-      // ОТПРАВКА ПРОГРЕССА В АДМИНКУ
-      if (currentUser) { 
-        database.ref('active_sessions/' + currentUser + '/current_module').set(isPracticeMode ? "Экзамен: Вопрос " + (currentAcademyIndex + 1) : `Теория: Урок ${currentAcademyIndex + 1}`); 
-      }
-
-      window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
-    function handleAcademyNavigation() {
-      let total = academyLessons.length;
-      if (!isPracticeMode) {
-        currentAcademyIndex++;
-        if (currentAcademyIndex < total) {
-          renderAcademyScreen();
-        } else {
-          alert("Теоретический курс изучен. Начинается сквозной экзамен из 60 вопросов с перемешанными ответами!");
-          isPracticeMode = true;
-          forceReadTheoryMode = false;
-          currentAcademyIndex = 0;
-          renderAcademyScreen();
-        }
-      } else if (isPracticeMode && forceReadTheoryMode) {
-        forceReadTheoryMode = false;
-        renderAcademyScreen();
-      } else {
-        currentAcademyIndex++;
-        if (currentAcademyIndex < total) {
-          renderAcademyScreen();
-        } else {
-          document.getElementById('global-progress').style.display = 'none';
-          switchScreen('scr-finish');
-        }
-      }
-    }
-
-    function selectPracticeOption(el, isCorrect, hint) {
-      let btns = document.querySelectorAll('.option-btn');
-      let fb = document.getElementById('acad-feedback');
-      
-      btns.forEach(b => { b.classList.remove('correct', 'wrong'); b.querySelector('i').className = 'far fa-circle'; });
-
-      if(isCorrect) {
-        el.classList.add('correct');
-        el.querySelector('i').className = 'fas fa-check-circle';
-        fb.style.display = 'block';
-        fb.innerHTML = `<span style="color:#4caf50;">✔ Верно! ${hint}</span>`;
-        document.getElementById('acad-next-btn').disabled = false;
-      } else {
-        el.classList.add('wrong');
-        el.querySelector('i').className = 'fas fa-times-circle';
-        fb.style.display = 'block';
-        fb.innerHTML = `<span style="color:#f44336;">❌ Неверно! Ошибка отбрасывает вас на изучение теории этого правила.</span>`;
-        
-        setTimeout(() => {
-          forceReadTheoryMode = true;
-          renderAcademyScreen();
-        }, 2000);
-      }
+      switchScreen(scr);
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const navItem = document.querySelector(`.nav-item[data-screen="${screenId}"]`);
+      if (navItem) navItem.classList.add('active');
+      if (scr === 'scr-dashboard') { updateAllUI(); recordActivity(); }
+      if (scr === 'scr-academy') { switchAcademyTab(currentAcademyTab); updateAcademyActiveButtons(); }
+      if (scr === 'scr-results') renderResults();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function switchScreen(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
     }
 
-    function toggleProfile(show) {
-      if(show) {
-        document.getElementById('p-name').innerText = currentUser || '--';
-        document.getElementById('p-ex').innerText = userData.exchange || 'Не выбрана';
-        document.getElementById('p-prog').innerText = `${currentAcademyIndex + 1} из ${academyLessons.length}`;
-        document.getElementById('prof-modal').style.display = 'flex';
+    function switchAcademyTab(tab) {
+      currentAcademyTab = tab;
+      const theoryDiv = document.getElementById('academy-theory');
+      const practiceDiv = document.getElementById('academy-practice');
+      const theoryBtn = document.getElementById('academy-tab-theory');
+      const practiceBtn = document.getElementById('academy-tab-practice');
+      if (tab === 'theory') {
+        if (theoryDiv) theoryDiv.style.display = 'block';
+        if (practiceDiv) practiceDiv.style.display = 'none';
+        if (theoryBtn) { theoryBtn.style.background = 'var(--gold)'; theoryBtn.style.color = '#07090e'; theoryBtn.classList.remove('btn-secondary'); }
+        if (practiceBtn) { practiceBtn.style.background = 'var(--bg-card)'; practiceBtn.style.color = 'var(--text-primary)'; practiceBtn.classList.add('btn-secondary'); }
+        renderTheoryList();
       } else {
-        document.getElementById('prof-modal').style.display = 'none';
+        if (theoryDiv) theoryDiv.style.display = 'none';
+        if (practiceDiv) practiceDiv.style.display = 'block';
+        if (practiceBtn) { practiceBtn.style.background = 'var(--gold)'; practiceBtn.style.color = '#07090e'; practiceBtn.classList.remove('btn-secondary'); }
+        if (theoryBtn) { theoryBtn.style.background = 'var(--bg-card)'; theoryBtn.style.color = 'var(--text-primary)'; theoryBtn.classList.add('btn-secondary'); }
+        renderPracticeQuestions();
       }
     }
 
-    function logout() {
-      currentUser = "";
-      currentSetupIndex = 0; currentAcademyIndex = 0; isPracticeMode = false; forceReadTheoryMode = false;
-      document.getElementById('global-progress').style.display = 'none';
-      document.getElementById('header-tools').style.display = 'none';
-      document.getElementById('log-username').value = "";
-      document.getElementById('log-password').value = "";
-      toggleProfile(false);
-      switchScreen('scr-login');
+    function updateAcademyActiveButtons() {
+      const theoryBtn = document.getElementById('academy-tab-theory');
+      const practiceBtn = document.getElementById('academy-tab-practice');
+      if (currentAcademyTab === 'theory') {
+        if (theoryBtn) { theoryBtn.style.background = 'var(--gold)'; theoryBtn.style.color = '#07090e'; theoryBtn.classList.remove('btn-secondary'); }
+        if (practiceBtn) { practiceBtn.style.background = 'var(--bg-card)'; practiceBtn.style.color = 'var(--text-primary)'; practiceBtn.classList.add('btn-secondary'); }
+      } else {
+        if (practiceBtn) { practiceBtn.style.background = 'var(--gold)'; practiceBtn.style.color = '#07090e'; practiceBtn.classList.remove('btn-secondary'); }
+        if (theoryBtn) { theoryBtn.style.background = 'var(--bg-card)'; theoryBtn.style.color = 'var(--text-primary)'; theoryBtn.classList.add('btn-secondary'); }
+      }
     }
+
+    // ==================== АВТОРИЗАЦИЯ ====================
+    function handleLogin() {
+      const u = document.getElementById('log-username').value.trim().toLowerCase();
+      const p = document.getElementById('log-password').value.trim();
+      const btn = document.getElementById('login-btn');
+      if (!u || !p) { showToast('❌ Заполните все поля', 'error'); return; }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Проверка...';
+
+      // Локальный режим (без Firebase)
+      if (!firebaseAvailable || !database) {
+        const localUsers = JSON.parse(localStorage.getItem('p2p_local_users') || '{}');
+        
+        if (localUsers[u]) {
+          // Проверяем пароль
+          if (localUsers[u].password !== p) {
+            showToast('❌ Неверный пароль', 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Авторизовать устройство <i class="fas fa-sign-in-alt"></i>';
+            return;
+          }
+          // Проверяем привязку к устройству
+          if (localUsers[u].deviceUID && localUsers[u].deviceUID !== myDeviceUID) {
+            showToast('🚫 Этот аккаунт уже привязан к другому устройству!', 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Авторизовать устройство <i class="fas fa-sign-in-alt"></i>';
+            return;
+          }
+          // Привязываем устройство, если ещё не привязано
+          if (!localUsers[u].deviceUID) {
+            localUsers[u].deviceUID = myDeviceUID;
+            localStorage.setItem('p2p_local_users', JSON.stringify(localUsers));
+          }
+          completeLogin(u);
+        } else {
+          showToast('❌ Аккаунт не найден. Обратитесь к администратору.', 'error');
+        }
+        btn.disabled = false;
+        btn.innerHTML = 'Авторизовать устройство <i class="fas fa-sign-in-alt"></i>';
+        return;
+      }
+
+      // Firebase режим
+      database.ref('system_access/' + u).once('value')
+        .then(snap => {
+          const data = snap.val();
+          if (!data) {
+            showToast('❌ Аккаунт не найден. Обратитесь к администратору.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Авторизовать устройство <i class="fas fa-sign-in-alt"></i>';
+            return;
+          }
+          if (data.blocked) {
+            showToast('🚫 Аккаунт заблокирован', 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Авторизовать устройство <i class="fas fa-sign-in-alt"></i>';
+            return;
+          }
+          if (data.deviceUID && data.deviceUID !== myDeviceUID) {
+            showToast('🚫 Этот аккаунт уже привязан к другому устройству!', 'error');
+            btn.disabled = false;
+            btn.innerHTML = 'Авторизовать устройство <i class="fas fa-sign-in-alt"></i>';
+            return;
+          }
+          if (data.password === p) {
+            if (!data.deviceUID) {
+              database.ref('system_access/' + u + '/deviceUID').set(myDeviceUID).catch(() => {});
+            }
+            completeLogin(u);
+            database.ref('active_sessions/' + u).set({
+              device_uid: myDeviceUID,
+              current_module: 'Дашборд',
+              last_ping: Date.now()
+            }).catch(() => {});
+            startDeviceGuard();
+          } else {
+            showToast('❌ Неверный пароль', 'error');
+          }
+        })
+        .catch(err => {
+          console.warn('Ошибка Firebase:', err);
+          showToast('⚠️ Ошибка соединения. Попробуйте позже.', 'error');
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerHTML = 'Авторизовать устройство <i class="fas fa-sign-in-alt"></i>';
+        });
+    }
+
+    function completeLogin(u) {
+      currentUser = u;
+      loadSavedUserData();
+      updateAllUI();
+      navigateTo('dashboard');
+      recordActivity();
+      showToast('✅ Успешный вход! Добро пожаловать.', 'success');
+      const saved = localStorage.getItem('p2p_userdata_' + u);
+      if (saved) { try { userData = { ...userData, ...JSON.parse(saved) }; saveUserData(); } catch(e) {} }
+    }
+
+    function startDeviceGuard() {
+      if (!firebaseAvailable || !database) return;
+      setInterval(() => {
+        if (!currentUser) return;
+        database.ref('system_access/' + currentUser + '/blocked').once('value')
+          .then(snap => { if (snap.val() === true) { showToast('🚫 Аккаунт заблокирован!', 'error'); logout(); } }).catch(() => {});
+        database.ref('system_access/' + currentUser + '/deviceUID').once('value')
+          .then(snap => { if (snap.val() && snap.val() !== myDeviceUID) { showToast('⚠️ Аккаунт открыт на другом устройстве!', 'error'); logout(); } }).catch(() => {});
+      }, 3000);
+    }
+
+    // ==================== ТЕОРИЯ ====================
+    function renderTheoryList() {
+      const list = document.getElementById('theory-lesson-list');
+      if (!list) return;
+      list.innerHTML = allLessons.map((l, i) => {
+        const completed = i < (userData.lessonsDone || 0);
+        return `<div class="card" style="animation: fadeSlideIn 0.4s ease ${i*0.01}s both; cursor:pointer;" onclick="openTheoryLesson(${i})">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:44px; height:44px; border-radius:14px; background:${completed ? 'var(--success)' : 'var(--bg-card)'}; border: 2px solid ${completed ? 'var(--success)' : 'var(--border)'}; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;">${completed ? '✅' : '📖'}</div>
+            <div style="flex:1; min-width:0;">
+              <span style="background:rgba(247,216,117,0.1); color:var(--gold); padding:2px 8px; border-radius:10px; font-size:0.7rem; display:inline-block; margin-bottom:4px;">${l.badge}</span>
+              <h4 style="margin:0; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${l.title}</h4>
+            </div>
+            <i class="fas fa-chevron-right" style="color:var(--text-secondary); flex-shrink:0;"></i>
+          </div></div>`;
+      }).join('');
+    }
+
+    function openTheoryLesson(index) {
+      const l = allLessons[index];
+      const completed = index < (userData.lessonsDone || 0);
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.style.display = 'flex';
+      modal.id = 'theory-lesson-modal';
+      modal.innerHTML = `<div class="modal-card" onclick="event.stopPropagation()" style="max-width:550px; animation: fadeSlideIn 0.3s ease;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <span style="background:rgba(247,216,117,0.1); color:var(--gold); padding:4px 10px; border-radius:12px; font-size:0.75rem;">${l.badge}</span>
+          ${completed ? '<span style="color:var(--success);">✅ Пройдено</span>' : ''}
+        </div>
+        <h3 style="margin-bottom:16px;">${l.title}</h3>
+        <div class="theory-block">${l.text}</div>
+        ${l.hint ? `<div style="background:rgba(79,140,255,0.05); padding:12px; border-radius:12px; margin-top:12px;"><p style="font-size:0.8rem; color:var(--accent);"><i class="fas fa-lightbulb"></i> <strong>Ключевой момент:</strong> ${l.hint}</p></div>` : ''}
+        <p style="font-size:0.75rem; color:var(--text-secondary); margin-top:12px;">⚠️ После изучения теории перейдите во вкладку «Практика» для проверки знаний.</p>
+        <button class="btn-action mt-16" onclick="closeTheoryModal()">${completed ? '✅ Закрыть' : 'Понятно, закрыть'}</button>
+      </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', function(e) { if (e.target === modal) closeTheoryModal(); });
+    }
+
+    function closeTheoryModal() {
+      const modal = document.getElementById('theory-lesson-modal');
+      if (modal) { modal.style.opacity = '0'; modal.style.transition = 'opacity 0.3s ease'; setTimeout(() => modal.remove(), 300); }
+    }
+
+    // ==================== ПРАКТИКА ====================
+    function renderPracticeQuestions() {
+      const list = document.getElementById('practice-questions-list');
+      if (!list) return;
+      const lessonsDone = userData.lessonsDone || 0;
+      const pendingLessons = allLessons.slice(lessonsDone);
+      if (pendingLessons.length === 0) {
+        list.innerHTML = `<div class="card text-center"><div style="font-size:3rem;">🎉</div><h3>Все уроки пройдены!</h3><p style="color:var(--text-secondary);">Поздравляем! Вы ответили на все вопросы.</p><button class="btn-action mt-8" onclick="navigateTo('dashboard')">На главную</button></div>`;
+        return;
+      }
+      const shuffledQuestions = shuffleArray(pendingLessons.map((l, i) => ({...l, realIndex: lessonsDone + i})));
+      list.innerHTML = shuffledQuestions.map((l, displayIndex) => {
+        const shuffledOptions = shuffleArray(l.options.map((o, i) => ({...o, originalIndex: i})));
+        return `<div class="card practice-block" style="animation: fadeSlideIn 0.4s ease ${displayIndex*0.02}s both;">
+          <span style="background:rgba(79,140,255,0.1); color:var(--accent); padding:4px 10px; border-radius:12px; font-size:0.75rem; display:inline-block; margin-bottom:8px;">${l.badge}</span>
+          <h4 style="margin-bottom:8px;">${l.title}</h4>
+          <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:12px;"><i class="fas fa-question-circle" style="color:var(--gold);"></i> ${l.question}</p>
+          <div style="display:flex; flex-direction:column; gap:8px;" id="practice-options-${l.realIndex}">
+            ${shuffledOptions.map((o, i) => `<button class="btn-action btn-secondary" style="text-align:left; padding:12px 16px;" onclick="checkPracticeAnswer(${l.realIndex}, ${o.originalIndex}, this, 'practice-options-${l.realIndex}', 'practice-feedback-${l.realIndex}')"><i class="far fa-circle"></i> ${o.text}</button>`).join('')}
+          </div>
+          <p id="practice-feedback-${l.realIndex}" style="margin-top:10px; font-weight:500; display:none;"></p>
+        </div>`;
+      }).join('');
+    }
+
+    function checkPracticeAnswer(lessonIndex, optionIndex, btn, optionsContainerId, feedbackId) {
+      const l = allLessons[lessonIndex];
+      const fb = document.getElementById(feedbackId);
+      const buttons = document.querySelectorAll(`#${optionsContainerId} button`);
+      buttons.forEach(b => { b.disabled = true; b.style.pointerEvents = 'none'; });
+      if (l.options[optionIndex].correct) {
+        btn.style.background = 'var(--success)'; btn.style.color = '#fff'; btn.style.border = '1px solid var(--success)';
+        btn.querySelector('i').className = 'fas fa-check-circle';
+        if (fb) { fb.style.display = 'block'; fb.innerHTML = `<span style="color:var(--success);">✅ Верно! ${l.hint}</span>`; }
+        if (lessonIndex + 1 > (userData.lessonsDone || 0)) {
+          userData.lessonsDone = lessonIndex + 1;
+          if (userData.lessonsDone >= 60) userData.level = 'Эксперт';
+          else if (userData.lessonsDone >= 30) userData.level = 'Продвинутый';
+          else if (userData.lessonsDone >= 10) userData.level = 'Ученик';
+          saveUserData();
+          recordActivity();
+          showToast('🎉 Правильно! Прогресс обновлён.', 'success');
+          setTimeout(() => renderPracticeQuestions(), 1000);
+          if (userData.lessonsDone >= 60) {
+            setTimeout(() => { spawnConfetti(); setTimeout(() => switchScreen('scr-finish'), 1500); }, 1000);
+          }
+        }
+      } else {
+        btn.style.background = 'var(--danger)'; btn.style.color = '#fff'; btn.style.border = '1px solid var(--danger)';
+        btn.querySelector('i').className = 'fas fa-times-circle';
+        if (fb) { fb.style.display = 'block'; fb.innerHTML = `<span style="color:var(--danger);">❌ Неверно. Сейчас вы будете перенаправлены к теории этого урока.</span>`; }
+        buttons.forEach((b, i) => { if (l.options[i].correct) { b.style.background = 'rgba(76,175,80,0.2)'; b.style.border = '1px solid var(--success)'; } });
+        showToast('❌ Неправильно. Изучите теорию этого урока заново.', 'error');
+        setTimeout(() => { switchAcademyTab('theory'); setTimeout(() => openTheoryLesson(lessonIndex), 300); }, 1500);
+      }
+    }
+
+    function filterLessons() {
+      const q = document.getElementById('lesson-search')?.value.toLowerCase() || '';
+      const selector = currentAcademyTab === 'theory' ? '#theory-lesson-list .card' : '#practice-questions-list .card';
+      const cards = document.querySelectorAll(selector);
+      allLessons.forEach((l, i) => {
+        if (cards[i]) {
+          const match = l.title.toLowerCase().includes(q) || l.badge.toLowerCase().includes(q) || l.text.toLowerCase().includes(q) || (l.question && l.question.toLowerCase().includes(q));
+          cards[i].style.display = match ? 'block' : 'none';
+        }
+      });
+    }
+
+    // ==================== РЕЗУЛЬТАТЫ ====================
+    function renderResults() {
+      const content = document.getElementById('results-content');
+      if (!content) return;
+      const lessonsDone = userData.lessonsDone || 0;
+      const percentage = Math.round(lessonsDone / 60 * 100);
+      content.innerHTML = `<div style="display:flex; justify-content:space-around; text-align:center; margin:16px 0;">
+        <div><div style="font-size:2rem; color:var(--gold);">${lessonsDone}</div><small style="color:var(--text-secondary);">Уроков пройдено</small></div>
+        <div><div style="font-size:2rem; color:var(--accent);">${percentage}%</div><small style="color:var(--text-secondary);">Прогресс</small></div>
+        <div><div style="font-size:2rem; color:var(--success);">${userData.streak || 0}</div><small style="color:var(--text-secondary);">Дней подряд</small></div>
+      </div>
+      <div style="background:var(--bg-card); border-radius:14px; padding:12px; margin-top:12px;">
+        <p><strong>📊 Уровень:</strong> ${userData.level || 'Новичок'}</p>
+        <p><strong>🛡️ Защита:</strong> ${userData.protectionLevel || 'Базовая'}</p>
+        <p><strong>📅 Осталось уроков:</strong> ${60 - lessonsDone}</p>
+      </div>`;
+      updateCalendarWidget();
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      const toggle = document.getElementById('theme-toggle');
+      if (toggle) toggle.classList.toggle('active', !isLight);
+      localStorage.setItem('p2p_theme', isLight ? 'light' : 'dark');
+    }
+
+    function toggleProfileMenu() {
+      const modal = document.getElementById('profile-modal');
+      if (!modal) return;
+      if (modal.style.display === 'flex') modal.style.display = 'none';
+      else { updateAllUI(); modal.style.display = 'flex'; }
+    }
+
+    function showLogoutConfirm() {
+      const modal = document.getElementById('logout-modal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function showNotifications() {
+      const modal = document.getElementById('notif-modal');
+      if (modal) modal.style.display = 'flex';
+      const notifList = document.getElementById('notif-list');
+      if (notifList) {
+        notifList.innerHTML = `<div style="padding:12px; background:rgba(79,140,255,0.1); border-radius:12px; margin-bottom:8px;"><strong>🔔 Добро пожаловать!</strong><p style="font-size:0.8rem; color:var(--text-secondary);">Начните обучение с первого урока. Изучайте теорию, затем проходите практику.</p></div>
+        <div style="padding:12px; background:rgba(247,216,117,0.05); border-radius:12px; margin-bottom:8px;"><strong>💡 Совет</strong><p style="font-size:0.8rem; color:var(--text-secondary);">Каждый урок содержит полное описание схемы мошенничества и способы защиты.</p></div>`;
+      }
+    }
+
+    function showFAQ() { showToast('📖 FAQ: Свяжитесь с куратором через поддержку.', 'info'); }
+
+    function logout() {
+      const logoutModal = document.getElementById('logout-modal');
+      const profileModal = document.getElementById('profile-modal');
+      if (logoutModal) logoutModal.style.display = 'none';
+      if (profileModal) profileModal.style.display = 'none';
+      
+      if (currentUser && firebaseAvailable && database) {
+        database.ref('active_sessions/' + currentUser).remove().catch(() => {});
+      }
+      
+      currentUser = '';
+      switchScreen('scr-login');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      showToast('👋 Вы вышли из системы', 'info');
+    }
+
+    function spawnConfetti() {
+      const colors = ['#f0b34b','#f7d875','#4f8cff','#4caf50','#f44336','#ff9800','#e91e63','#00bcd4'];
+      for (let i = 0; i < 100; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.top = -(Math.random() * 30 + 10) + 'px';
+        piece.style.width = (Math.random() * 12 + 6) + 'px';
+        piece.style.height = (Math.random() * 12 + 6) + 'px';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+        piece.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        piece.style.animationDelay = Math.random() * 0.8 + 's';
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 4000);
+      }
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-20px)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    function showOnboardingHint() {
+      if (!localStorage.getItem('p2p_onboarded')) {
+        setTimeout(() => { showToast('💡 Изучайте теорию, затем проходите практику. При ошибке вернётесь к теории.', 'info'); localStorage.setItem('p2p_onboarded', 'true'); }, 3000);
+      }
+    }
+
+    // ==================== ЗАПУСК ====================
+    document.addEventListener('DOMContentLoaded', () => { initApp(); });
+    if (document.readyState === 'interactive' || document.readyState === 'complete') { initApp(); }
   </script>
 </body>
-</html>
